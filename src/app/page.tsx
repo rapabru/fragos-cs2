@@ -1071,15 +1071,35 @@ export default function FragOSDashboard() {
                   <div className="text-slate-300 font-semibold">• 50 kills en movimiento continuo A/D</div>
                   <div className="text-slate-300 font-semibold">• 25 kills con Deagle a distancia media</div>
                 </div>
-                <div className="pt-2">
-                  <a
-                    href="https://steamcommunity.com/sharedfiles/filedetails/?id=3070244462"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-2.5 rounded-xl transition text-white"
-                  >
-                    Abrir Aim Botz en Workshop <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                <div className="pt-2 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href="steam://run/730//+map_workshop 3070244462"
+                      className="inline-flex items-center justify-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-black text-xs font-bold py-2 px-3 rounded-xl transition shadow-md shadow-cyan-600/20"
+                      title="Abre CS2 directamente en Aim Botz (requiere suscripción previa en Steam)"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" /> Lanzar en CS2
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard("map_workshop 3070244462", "aimbotz_cmd")}
+                      className="inline-flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl transition border border-slate-700/60"
+                      title="Copiar comando para consola (~) si el juego ya está abierto"
+                    >
+                      {copiedId === "aimbotz_cmd" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedId === "aimbotz_cmd" ? "¡Copiado (~)" : "Copiar Comando"}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] text-slate-500 font-mono">Consola: map_workshop 3070244462</span>
+                    <a
+                      href="https://steamcommunity.com/sharedfiles/filedetails/?id=3070244462"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 transition"
+                    >
+                      Ver en Workshop <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -1100,15 +1120,35 @@ export default function FragOSDashboard() {
                   <div className="text-slate-300 font-semibold">• 0 balas falladas antes del contacto</div>
                   <div className="text-slate-300 font-semibold">• Time-to-damage objetivo: &lt; 380ms</div>
                 </div>
-                <div className="pt-2">
-                  <a
-                    href="https://steamcommunity.com/sharedfiles/filedetails/?id=3267302800"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-2.5 rounded-xl transition text-white"
-                  >
-                    Abrir Mirage Prefire <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                <div className="pt-2 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href="steam://run/730//+map_workshop 3267302800"
+                      className="inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-xl transition shadow-md shadow-rose-600/20"
+                      title="Abre CS2 directamente en Mirage Prefire (requiere suscripción previa en Steam)"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" /> Lanzar en CS2
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard("map_workshop 3267302800", "prefire_cmd")}
+                      className="inline-flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl transition border border-slate-700/60"
+                      title="Copiar comando para consola (~) si el juego ya está abierto"
+                    >
+                      {copiedId === "prefire_cmd" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedId === "prefire_cmd" ? "¡Copiado (~)" : "Copiar Comando"}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] text-slate-500 font-mono">Consola: map_workshop 3267302800</span>
+                    <a
+                      href="https://steamcommunity.com/sharedfiles/filedetails/?id=3267302800"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-rose-400 hover:text-rose-300 inline-flex items-center gap-1 transition"
+                    >
+                      Ver en Workshop <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -1129,13 +1169,27 @@ export default function FragOSDashboard() {
                   <div className="text-slate-300 font-semibold">• Solo ráfagas de 2-3 balas (bursting)</div>
                   <div className="text-slate-300 font-semibold">• 50 frags antes de ingresar a Premier</div>
                 </div>
-                <div className="pt-2">
-                  <button
-                    onClick={() => copyToClipboard("connect 45.235.98.178:27015", "dm")}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold py-2.5 rounded-xl transition"
-                  >
-                    {copiedId === "dm" ? "¡Comando Copiado!" : "Copiar IP de Servidor DM"} <Copy className="w-3.5 h-3.5" />
-                  </button>
+                <div className="pt-2 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href="steam://connect/45.235.98.178:27015"
+                      className="inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold py-2 px-3 rounded-xl transition shadow-md shadow-emerald-500/20"
+                      title="Conectar directamente al servidor Deathmatch en CS2"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" /> Conectar CS2
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard("connect 45.235.98.178:27015", "dm")}
+                      className="inline-flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl transition border border-slate-700/60"
+                    >
+                      {copiedId === "dm" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedId === "dm" ? "¡Copiado (~)" : "Copiar IP DM"}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] text-slate-500 font-mono">Consola: connect 45.235.98.178:27015</span>
+                    <span className="text-[10px] text-emerald-400 font-medium">128 Tick / Warmup FFA</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1152,13 +1206,22 @@ export default function FragOSDashboard() {
                       <div className="text-xs font-bold text-slate-200">{m.name}</div>
                       <div className="text-[10px] text-cyan-400 font-mono mt-0.5">{m.command}</div>
                     </div>
-                    <button
-                      onClick={() => copyToClipboard(m.command, m.id)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
-                      title="Copiar comando de consola"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <a
+                        href={`steam://run/730//+map_workshop ${m.id}`}
+                        className="p-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800/60 text-cyan-400 hover:text-cyan-200 transition"
+                        title="Lanzar en CS2 directamente"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                      </a>
+                      <button
+                        onClick={() => copyToClipboard(m.command, m.id)}
+                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700/60"
+                        title="Copiar comando de consola (~)"
+                      >
+                        {copiedId === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
