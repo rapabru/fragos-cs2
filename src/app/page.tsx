@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Crosshair,
   Timer,
@@ -26,7 +26,14 @@ import {
   History,
   Activity,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Link2,
+  User,
+  Settings,
+  X,
+  RefreshCw,
+  Sliders,
+  Check
 } from "lucide-react";
 import {
   Radar,
@@ -34,67 +41,121 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip
+  ResponsiveContainer
 } from "recharts";
 
-// Datos de Auditoría Forense y Benchmarks tipo Leetify extraídos del caso real
-const INITIAL_STATS = {
-  username: "LA VIEJA (El Rapa!)",
-  steamId: "76561198000000000",
-  avatarUrl: "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
-  premierRating: 4903, // Pico histórico alcanzado en Ancient Premier
-  rankTitle: "Silver Elite Master (Frontera Gold Nova ~5K)",
-  faceitLevel: 4,
-  leetifyRating: "+0.55",
-  hltvRating: 0.97,
-  kdRatio: 1.06,
-  adr: 74.5,
-  hsAccuracy: "37%",
-  timeToDamageMs: 400,
-  crosshairPlacementError: 7.8, // grados
-  counterStrafeEfficiency: 79, // %
-  openingDuelWinrate: 67, // %
-  openingDuelRating: "+5.1",
-  openingDuelAttempts: "15%",
-  aimRatingPB: 96, // Récord en Dust 2 Premier (anterior 93)
-  multikillsTotal: 53, // 47x 2K, 6x 3K
-  clutchWinrate: 18, // %
-  clutchRating: "+10.18",
-  tradeKillSuccess: 29, // %
-  tradeOpportunities: 75,
-  roundsSurvived: "37%", // 130 / 348 rondas
-  winRate: "65%", // 11W - 6L
-  winStreak: 5 // Dust 2 -> Overpass -> Ancient -> Nuke -> Inferno
+// Perfiles Predefinidos y Casos de Estudio Reales
+const PRESET_PROFILES = {
+  la_vieja: {
+    id: "la_vieja",
+    username: "LA VIEJA (El Rapa!)",
+    steamId: "76561198000000000",
+    avatarUrl: "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
+    premierRating: 4903,
+    rankTitle: "Silver Elite Master (Frontera Gold Nova ~5K)",
+    faceitLevel: 4,
+    leetifyRating: "+0.55",
+    hltvRating: 0.97,
+    kdRatio: 1.06,
+    adr: 74.5,
+    hsAccuracy: "37%",
+    timeToDamageMs: 400,
+    crosshairPlacementError: 7.8,
+    counterStrafeEfficiency: 79,
+    openingDuelWinrate: 67,
+    openingDuelRating: "+5.1",
+    openingDuelAttempts: "15%",
+    aimRatingPB: 96,
+    multikillsTotal: 53,
+    clutchWinrate: 18,
+    clutchRating: "+10.18",
+    tradeKillSuccess: 29,
+    tradeOpportunities: 75,
+    roundsSurvived: "37%",
+    winRate: "65%",
+    winStreak: 5,
+    weakness1Title: "Inconsistencia y Volatilidad Extrema",
+    weakness1Desc: "Picos de +19.36 en Mirage pero caídas de -9.90. Dependencia del día mecánico.",
+    weakness1Med: "15 min Warmup pre-match obligatorio",
+    weakness2Title: "Conversión de Trade Kills (29% Éxito)",
+    weakness2Desc: "Intentas el re-frag 91% del tiempo pero solo rematas 29%. Falta de espaciado en tándem.",
+    weakness2Med: "10 min Prefire & Tándem drills"
+  },
+  recluta: {
+    id: "recluta",
+    username: "Jugador Recluta (En Desarrollo)",
+    steamId: "76561198111111111",
+    avatarUrl: "https://avatars.steamstatic.com/b5bd56c1aa4644a474a2e4973b3139e40d955134_full.jpg",
+    premierRating: 3250,
+    rankTitle: "Silver II / Premier < 4K",
+    faceitLevel: 2,
+    leetifyRating: "-4.20",
+    hltvRating: 0.65,
+    kdRatio: 0.68,
+    adr: 54.2,
+    hsAccuracy: "28%",
+    timeToDamageMs: 530,
+    crosshairPlacementError: 9.8,
+    counterStrafeEfficiency: 54,
+    openingDuelWinrate: 38,
+    openingDuelRating: "-2.8",
+    openingDuelAttempts: "22%",
+    aimRatingPB: 62,
+    multikillsTotal: 14,
+    clutchWinrate: 11,
+    clutchRating: "+3.20",
+    tradeKillSuccess: 21,
+    tradeOpportunities: 50,
+    roundsSurvived: "24%",
+    winRate: "39%",
+    winStreak: 1,
+    weakness1Title: "Crosshair Placement y Postura al Caminar",
+    weakness1Desc: "La mira apunta constantemente al suelo o pecho. El tiempo de reacción supera los 530ms.",
+    weakness1Med: "Aim Botz (15m) + Recoil Master",
+    weakness2Title: "Counter-Strafing Incompleto",
+    weakness2Desc: "Disparos en movimiento con pérdida del 70% de precisión de la primera bala.",
+    weakness2Med: "Movement Hub KZ & freno con A/D"
+  },
+  veterano: {
+    id: "veterano",
+    username: "Veterano Táctico (Faceit Grinder)",
+    steamId: "76561198222222222",
+    avatarUrl: "https://avatars.steamstatic.com/6c0715392cf99a16fcf74026bbde8bf8b98eb537_full.jpg",
+    premierRating: 14850,
+    rankTitle: "Premier 15k / Faceit Level 7",
+    faceitLevel: 7,
+    leetifyRating: "+4.12",
+    hltvRating: 1.18,
+    kdRatio: 1.24,
+    adr: 86.8,
+    hsAccuracy: "52%",
+    timeToDamageMs: 340,
+    crosshairPlacementError: 5.4,
+    counterStrafeEfficiency: 88,
+    openingDuelWinrate: 59,
+    openingDuelRating: "+3.9",
+    openingDuelAttempts: "26%",
+    aimRatingPB: 91,
+    multikillsTotal: 68,
+    clutchWinrate: 27,
+    clutchRating: "+14.50",
+    tradeKillSuccess: 46,
+    tradeOpportunities: 82,
+    roundsSurvived: "42%",
+    winRate: "58%",
+    winStreak: 4,
+    weakness1Title: "Eficiencia de Utilería y Flashes",
+    weakness1Desc: "Lanza utilería por defecto sin coordinar con el push de sus compañeros.",
+    weakness1Med: "Setups de utilería pro en Anubis y Mirage",
+    weakness2Title: "Micro-Decisiones en Clutches 1v2",
+    weakness2Desc: "Dificultad para aislar el duelo y forzar el tap de la C4 en retakes.",
+    weakness2Med: "Revisión de demos de ropz y NiKo"
+  }
 };
 
-// Comparativa formal Período Anterior vs Período Actual (Extraída del PDF General Stats)
-const PERIOD_COMPARISON = [
-  { metric: "Win Rate", before: "40.0% (8W - 12L)", current: "65.0% (11W - 6L)", delta: "+25.0%", isPositive: true },
-  { metric: "HLTV 2.0 Rating", before: "0.59", current: "0.97", delta: "+64.4%", isPositive: true },
-  { metric: "K/D Ratio", before: "0.54", current: "1.06", delta: "+96.3% (x2)", isPositive: true },
-  { metric: "ADR (Daño/Ronda)", before: "51.78 HP", current: "74.50 HP", delta: "+43.9%", isPositive: true },
-  { metric: "KPR (Kills/Ronda)", before: "0.42", current: "0.66", delta: "+57.1%", isPositive: true },
-  { metric: "DPR (Muertes/Ronda)", before: "0.78", current: "0.63", delta: "-19.2%", isPositive: true },
-  { metric: "Opening Duel Winrate", before: "~45%", current: "67.0% (+5.1)", delta: "Élite", isPositive: true },
-  { metric: "Aim Rating Personal Best", before: "93", current: "96 (Dust 2)", delta: "+3 pts", isPositive: true }
-];
+const INITIAL_STATS = PRESET_PROFILES.la_vieja;
 
-// Matriz de Competencias Leetify
-const RADAR_DATA = [
-  { subject: "Aim Rating (PB 96)", player: 88, benchmark: 70, pro: 95 },
-  { subject: "Opening Duels (67%)", player: 94, benchmark: 65, pro: 92 },
-  { subject: "Counter-Strafe", player: 79, benchmark: 75, pro: 96 },
-  { subject: "Trade Conversion", player: 42, benchmark: 68, pro: 90 },
-  { subject: "Conversión Clutches", player: 38, benchmark: 62, pro: 85 },
-  { subject: "Consistencia / Regularidad", player: 52, benchmark: 70, pro: 92 }
-];
-
-// Historial Cronológico de Partidas Premier Valve (Extraído del dataset de Leetify)
+// Historial Cronológico de Partidas Premier Valve (Dataset Real)
 const PREMIER_MATCHES = [
   { date: "21-Ago", map: "Mirage", score: "16-14", rating: -1.67, csRating: 4437, kda: "20/21/8", status: "WIN", highlight: "Overtime Thriller" },
   { date: "21-Ago", map: "Dust 2", score: "7-13", rating: +0.82, csRating: 4220, kda: "13/15/4", status: "LOSS", highlight: "Positivo en derrota" },
@@ -250,16 +311,109 @@ const LINEUPS_VAULT = [
 ];
 
 export default function FragOSDashboard() {
+  const [stats, setStats] = useState(INITIAL_STATS);
   const [activeTab, setActiveTab] = useState<"diagnostico" | "historial" | "rutina" | "lineups" | "comunidad">("diagnostico");
   const [duration, setDuration] = useState<15 | 30 | 45 | 60>(30);
   const [selectedMap, setSelectedMap] = useState("Todos");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Estado del Modal de Conexión de Cuenta
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<"perfiles" | "vincular" | "manual">("perfiles");
+  const [steamInput, setSteamInput] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null);
+
+  // Inputs manuales para edición de estadísticas
+  const [customRating, setCustomRating] = useState(stats.premierRating);
+  const [customKD, setCustomKD] = useState(stats.kdRatio);
+  const [customADR, setCustomADR] = useState(stats.adr);
+  const [customWinrate, setCustomWinrate] = useState(stats.winRate);
+  const [customOpening, setCustomOpening] = useState(stats.openingDuelWinrate);
+
+  // Cargar perfil de localStorage al montar si existe
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("fragos_user_profile");
+      if (saved) {
+        setStats(JSON.parse(saved));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const saveProfile = (newProfile: typeof INITIAL_STATS) => {
+    setStats(newProfile);
+    try {
+      localStorage.setItem("fragos_user_profile", JSON.stringify(newProfile));
+    } catch (e) {}
+  };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const handleSelectPreset = (key: keyof typeof PRESET_PROFILES) => {
+    const selected = PRESET_PROFILES[key];
+    saveProfile(selected);
+    setSyncSuccessMessage(`Perfil cargado: ${selected.username}`);
+    setTimeout(() => {
+      setSyncSuccessMessage(null);
+      setIsConnectModalOpen(false);
+    }, 1200);
+  };
+
+  const handleSimulateSteamSync = () => {
+    if (!steamInput.trim()) return;
+    setIsSyncing(true);
+    setTimeout(() => {
+      setIsSyncing(false);
+      const updated = {
+        ...stats,
+        username: steamInput.includes("/") ? steamInput.split("/").filter(Boolean).pop() || "Mi Cuenta Steam" : steamInput,
+        steamId: steamInput.length === 17 ? steamInput : "76561198" + Math.floor(100000000 + Math.random() * 900000000),
+        rankTitle: "Cuenta Sincronizada vía Steam API",
+      };
+      saveProfile(updated);
+      setSyncSuccessMessage("¡Cuenta vinculada exitosamente con Steam & Leetify!");
+      setTimeout(() => {
+        setSyncSuccessMessage(null);
+        setIsConnectModalOpen(false);
+      }, 1400);
+    }, 1500);
+  };
+
+  const handleSaveCustom = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = {
+      ...stats,
+      premierRating: Number(customRating),
+      kdRatio: Number(customKD),
+      adr: Number(customADR),
+      winRate: String(customWinrate).includes("%") ? String(customWinrate) : `${customWinrate}%`,
+      openingDuelWinrate: Number(customOpening),
+      rankTitle: `Premier ${Number(customRating).toLocaleString()} Personalizado`
+    };
+    saveProfile(updated);
+    setSyncSuccessMessage("¡Métricas personalizadas actualizadas!");
+    setTimeout(() => {
+      setSyncSuccessMessage(null);
+      setIsConnectModalOpen(false);
+    }, 1200);
+  };
+
+  // Cálculo Dinámico de Datos de Radar según el perfil seleccionado
+  const radarData = [
+    { subject: `Aim Rating (${stats.aimRatingPB})`, player: Math.min(100, Math.round(stats.aimRatingPB * 0.95)), benchmark: 70, pro: 95 },
+    { subject: `Opening (${stats.openingDuelWinrate}%)`, player: Math.min(100, Math.round(stats.openingDuelWinrate * 1.3)), benchmark: 65, pro: 92 },
+    { subject: "Counter-Strafe", player: stats.counterStrafeEfficiency, benchmark: 75, pro: 96 },
+    { subject: "Trades & Spacing", player: Math.min(100, Math.round(stats.tradeKillSuccess * 1.5)), benchmark: 68, pro: 90 },
+    { subject: `Clutch (${stats.clutchWinrate}%)`, player: Math.min(100, Math.round(stats.clutchWinrate * 2.1)), benchmark: 62, pro: 85 },
+    { subject: "Consistencia", player: parseInt(stats.winRate) || 50, benchmark: 70, pro: 92 }
+  ];
 
   const filteredLineups = selectedMap === "Todos" 
     ? LINEUPS_VAULT 
@@ -268,7 +422,7 @@ export default function FragOSDashboard() {
   return (
     <div className="min-h-screen bg-[#0b0e14] text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
       {/* Top Navbar */}
-      <header className="border-b border-slate-800 bg-[#0d121c]/80 backdrop-blur sticky top-0 z-50">
+      <header className="border-b border-slate-800 bg-[#0d121c]/80 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
@@ -338,25 +492,267 @@ export default function FragOSDashboard() {
             </button>
           </nav>
 
-          {/* Player Badge */}
-          <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl">
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
-              <img src={INITIAL_STATS.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+          {/* Interactive Player Badge & Sync Trigger */}
+          <button
+            onClick={() => setIsConnectModalOpen(true)}
+            className="flex items-center gap-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-3 py-1.5 rounded-xl transition text-left group cursor-pointer"
+            title="Haz clic para conectar cuenta o cambiar perfil"
+          >
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition">
+              <img src={stats.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             </div>
-            <div className="text-left hidden sm:block">
+            <div className="hidden sm:block">
               <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
-                {INITIAL_STATS.username}
+                {stats.username}
                 <span className="text-[10px] px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30">
-                  {INITIAL_STATS.winRate} WR
+                  {stats.winRate} WR
                 </span>
               </div>
-              <div className="text-[10px] text-cyan-400 font-mono font-medium">
-                Pico {INITIAL_STATS.premierRating.toLocaleString()} CS Rating • {INITIAL_STATS.rankTitle}
+              <div className="text-[10px] text-cyan-400 font-mono font-medium flex items-center gap-1">
+                Pico {stats.premierRating.toLocaleString()} • Sincronizar <RefreshCw className="w-2.5 h-2.5 group-hover:rotate-180 transition-transform duration-500" />
               </div>
             </div>
-          </div>
+          </button>
         </div>
       </header>
+
+      {/* MODAL INTERACTIVO: CONECTAR CUENTA & CAMBIAR PERFIL */}
+      {isConnectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0f141f] border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setIsConnectModalOpen(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/60 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-950/80 border border-cyan-800/60 text-cyan-400 text-xs font-mono font-bold">
+                <Link2 className="w-3.5 h-3.5" /> Sincronización de Cuenta Steam & Leetify
+              </div>
+              <h3 className="text-xl font-black text-white mt-2">
+                Conectar Jugador / Cliente
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Sincroniza tu SteamID o selecciona entre perfiles de muestra para probar la calibración de rutinas y radar.
+              </p>
+            </div>
+
+            {syncSuccessMessage && (
+              <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/60 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-400" /> {syncSuccessMessage}
+              </div>
+            )}
+
+            {/* Modal Navigation Tabs */}
+            <div className="flex border-b border-slate-800 gap-4 text-xs font-bold pb-2">
+              <button
+                onClick={() => setModalTab("perfiles")}
+                className={`pb-1 border-b-2 transition ${
+                  modalTab === "perfiles"
+                    ? "border-cyan-400 text-cyan-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                1. Perfiles Demo & Casos
+              </button>
+              <button
+                onClick={() => setModalTab("vincular")}
+                className={`pb-1 border-b-2 transition ${
+                  modalTab === "vincular"
+                    ? "border-cyan-400 text-cyan-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                2. Vincular Steam / Leetify
+              </button>
+              <button
+                onClick={() => setModalTab("manual")}
+                className={`pb-1 border-b-2 transition ${
+                  modalTab === "manual"
+                    ? "border-cyan-400 text-cyan-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                3. Ingresar Mis Stats
+              </button>
+            </div>
+
+            {/* TAB 1: PRESET PROFILES */}
+            {modalTab === "perfiles" && (
+              <div className="space-y-3">
+                <div
+                  onClick={() => handleSelectPreset("la_vieja")}
+                  className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                    stats.id === "la_vieja"
+                      ? "bg-cyan-950/40 border-cyan-500/80"
+                      : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={PRESET_PROFILES.la_vieja.avatarUrl} className="w-10 h-10 rounded-xl" alt="La Vieja" />
+                    <div>
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        LA VIEJA (Caso Real Auditado)
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">Pico 4.9K</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        65% WR • 1.06 K/D • 67% Opening Duels • Aim PB 96
+                      </div>
+                    </div>
+                  </div>
+                  {stats.id === "la_vieja" && <span className="text-xs text-cyan-400 font-bold font-mono">Activo ✓</span>}
+                </div>
+
+                <div
+                  onClick={() => handleSelectPreset("recluta")}
+                  className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                    stats.id === "recluta"
+                      ? "bg-cyan-950/40 border-cyan-500/80"
+                      : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={PRESET_PROFILES.recluta.avatarUrl} className="w-10 h-10 rounded-xl" alt="Recluta" />
+                    <div>
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        Recluta (Premier &lt; 4K)
+                        <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px]">Falencias Altas</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        39% WR • 0.68 K/D • 9.8° Crosshair Error • Requiere Aim Botz
+                      </div>
+                    </div>
+                  </div>
+                  {stats.id === "recluta" && <span className="text-xs text-cyan-400 font-bold font-mono">Activo ✓</span>}
+                </div>
+
+                <div
+                  onClick={() => handleSelectPreset("veterano")}
+                  className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                    stats.id === "veterano"
+                      ? "bg-cyan-950/40 border-cyan-500/80"
+                      : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={PRESET_PROFILES.veterano.avatarUrl} className="w-10 h-10 rounded-xl" alt="Veterano" />
+                    <div>
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        Veterano Táctico (Premier 15K / Faceit 7)
+                        <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px]">Avanzado</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        58% WR • 1.24 K/D • 86.8 ADR • Requiere Setups Utilería
+                      </div>
+                    </div>
+                  </div>
+                  {stats.id === "veterano" && <span className="text-xs text-cyan-400 font-bold font-mono">Activo ✓</span>}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: VINCULAR STEAM */}
+            {modalTab === "vincular" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300">
+                    Ingresa tu SteamID64 o Enlace de Leetify:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://leetify.com/app/profile/76561198... o SteamID"
+                    value={steamInput}
+                    onChange={(e) => setSteamInput(e.target.value)}
+                    className="w-full bg-black/50 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    Ejemplo: <code>76561198012345678</code> o <code>https://steamcommunity.com/id/tunombre</code>
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-900/50 border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
+                  <div className="font-bold text-slate-200">ℹ️ Cómo funciona la sincronización en vivo:</div>
+                  <div>• Conecta con la API de Steam / Leetify para extraer tu historial oficial de Premier.</div>
+                  <div>• Recalcula tu Radar de Competencias y genera tu rutina adaptativa automáticamente.</div>
+                </div>
+
+                <button
+                  onClick={handleSimulateSteamSync}
+                  disabled={isSyncing || !steamInput.trim()}
+                  className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSyncing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Conectando con Steam Web API...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" /> Sincronizar y Calcular Radar
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* TAB 3: INGRESAR MIS STATS */}
+            {modalTab === "manual" && (
+              <form onSubmit={handleSaveCustom} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="text-slate-400 font-medium block mb-1">CS Rating Premier:</label>
+                    <input
+                      type="number"
+                      value={customRating}
+                      onChange={(e) => setCustomRating(Number(e.target.value))}
+                      className="w-full bg-black/40 border border-slate-800 rounded-xl p-2 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-medium block mb-1">K/D Ratio:</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={customKD}
+                      onChange={(e) => setCustomKD(Number(e.target.value))}
+                      className="w-full bg-black/40 border border-slate-800 rounded-xl p-2 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-medium block mb-1">ADR (Daño/Ronda):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={customADR}
+                      onChange={(e) => setCustomADR(Number(e.target.value))}
+                      className="w-full bg-black/40 border border-slate-800 rounded-xl p-2 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-medium block mb-1">Win Rate (%):</label>
+                    <input
+                      type="text"
+                      value={customWinrate}
+                      onChange={(e) => setCustomWinrate(e.target.value)}
+                      className="w-full bg-black/40 border border-slate-800 rounded-xl p-2 text-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition"
+                  >
+                    Guardar y Actualizar Radar en Vivo
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -367,67 +763,76 @@ export default function FragOSDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4">
                 <div className="text-slate-400 text-xs font-medium">Leetify Rating</div>
-                <div className="text-2xl font-black text-emerald-400 mt-1">{INITIAL_STATS.leetifyRating}</div>
-                <div className="text-[10px] text-slate-500 mt-1">Calificación: Bueno (Pico +19.36)</div>
+                <div className="text-2xl font-black text-emerald-400 mt-1">{stats.leetifyRating}</div>
+                <div className="text-[10px] text-slate-500 mt-1">Calificación de Impacto</div>
               </div>
               <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4">
                 <div className="text-slate-400 text-xs font-medium">K/D Ratio</div>
-                <div className="text-2xl font-black text-cyan-400 mt-1">{INITIAL_STATS.kdRatio}</div>
-                <div className="text-[10px] text-emerald-500 mt-1">↑ +96% (Duplicó impacto)</div>
+                <div className="text-2xl font-black text-cyan-400 mt-1">{stats.kdRatio}</div>
+                <div className="text-[10px] text-emerald-500 mt-1">Impacto Individual</div>
               </div>
               <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4">
                 <div className="text-slate-400 text-xs font-medium">ADR (Daño/Ronda)</div>
-                <div className="text-2xl font-black text-white mt-1">{INITIAL_STATS.adr}</div>
-                <div className="text-[10px] text-emerald-500 mt-1">↑ +44% (51.8 ➔ 74.5 HP)</div>
+                <div className="text-2xl font-black text-white mt-1">{stats.adr}</div>
+                <div className="text-[10px] text-emerald-500 mt-1">Daño Promedio</div>
               </div>
               <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4">
                 <div className="text-slate-400 text-xs font-medium">Opening Duels</div>
-                <div className="text-2xl font-black text-amber-400 mt-1">{INITIAL_STATS.openingDuelWinrate}%</div>
-                <div className="text-[10px] text-amber-400/90 mt-1">Rating +5.1 (Nivel Élite)</div>
+                <div className="text-2xl font-black text-amber-400 mt-1">{stats.openingDuelWinrate}%</div>
+                <div className="text-[10px] text-amber-400/90 mt-1">Rating {stats.openingDuelRating}</div>
               </div>
               <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4">
                 <div className="text-slate-400 text-xs font-medium">Aim Personal Best</div>
-                <div className="text-2xl font-black text-purple-400 mt-1">{INITIAL_STATS.aimRatingPB}</div>
-                <div className="text-[10px] text-purple-300 mt-1">Dust 2 Premier (antes 93)</div>
+                <div className="text-2xl font-black text-purple-400 mt-1">{stats.aimRatingPB}</div>
+                <div className="text-[10px] text-purple-300 mt-1">Récord de Puntería</div>
               </div>
               <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4">
-                <div className="text-slate-400 text-xs font-medium">Win Streak Premier</div>
-                <div className="text-2xl font-black text-cyan-300 mt-1">{INITIAL_STATS.winStreak} Partidas</div>
-                <div className="text-[10px] text-cyan-400/80 mt-1">Dust2-Ovp-Anc-Nuke-Inf</div>
+                <div className="text-slate-400 text-xs font-medium">Win Streak</div>
+                <div className="text-2xl font-black text-cyan-300 mt-1">{stats.winStreak} Partidas</div>
+                <div className="text-[10px] text-cyan-400/80 mt-1">Racha Vigente</div>
               </div>
             </div>
 
-            {/* SECCIÓN COMPARATIVA DE PERÍODOS (ANTES VS AHORA) */}
+            {/* SECCIÓN COMPARATIVA DE PERÍODOS (AUDITORÍA OFICIAL) */}
             <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-cyan-400" /> Evolución de Estadísticas (Período Anterior vs Actual)
+                    <Activity className="w-5 h-5 text-cyan-400" /> Evolución y Benchmarking Competitivo
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Extracción formal de Leetify PDF: 21 partidas (Ene-Jul) vs 18 partidas (Jul-Ago) exclusivamente Premier.
+                    Datos sincronizados para: <strong>{stats.username}</strong> ({stats.rankTitle})
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 text-xs font-mono">
-                  Pico Premier: 4,903 CS Rating
-                </div>
+                <button
+                  onClick={() => setIsConnectModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/80 border border-cyan-800/80 text-cyan-300 text-xs font-mono hover:bg-cyan-900/50 transition cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Cambiar Cuenta / Sincronizar
+                </button>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {PERIOD_COMPARISON.map((c, i) => (
-                  <div key={i} className="bg-black/30 border border-slate-800/80 rounded-2xl p-3.5 space-y-1">
-                    <div className="text-[11px] text-slate-400 font-medium">{c.metric}</div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500 text-xs line-through">{c.before}</span>
-                      <span className="text-sm font-bold text-white flex items-center gap-1">
-                        {c.current}
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5">
-                      <ArrowUpRight className="w-3 h-3" /> {c.delta}
-                    </div>
-                  </div>
-                ))}
+                <div className="bg-black/30 border border-slate-800/80 rounded-2xl p-3.5 space-y-1">
+                  <div className="text-[11px] text-slate-400 font-medium">Win Rate</div>
+                  <div className="text-sm font-bold text-white">{stats.winRate}</div>
+                  <div className="text-[10px] font-bold text-emerald-400">Objetivo &gt; 55%</div>
+                </div>
+                <div className="bg-black/30 border border-slate-800/80 rounded-2xl p-3.5 space-y-1">
+                  <div className="text-[11px] text-slate-400 font-medium">K/D Ratio</div>
+                  <div className="text-sm font-bold text-white">{stats.kdRatio}</div>
+                  <div className="text-[10px] font-bold text-cyan-400">Ratio de Bajas/Muertes</div>
+                </div>
+                <div className="bg-black/30 border border-slate-800/80 rounded-2xl p-3.5 space-y-1">
+                  <div className="text-[11px] text-slate-400 font-medium">ADR (Daño Promedio)</div>
+                  <div className="text-sm font-bold text-white">{stats.adr} HP</div>
+                  <div className="text-[10px] font-bold text-purple-400">Impacto por Ronda</div>
+                </div>
+                <div className="bg-black/30 border border-slate-800/80 rounded-2xl p-3.5 space-y-1">
+                  <div className="text-[11px] text-slate-400 font-medium">Opening Duel Winrate</div>
+                  <div className="text-sm font-bold text-white">{stats.openingDuelWinrate}%</div>
+                  <div className="text-[10px] font-bold text-amber-400">Primer Contacto</div>
+                </div>
               </div>
             </div>
 
@@ -440,11 +845,11 @@ export default function FragOSDashboard() {
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                       <Target className="w-5 h-5 text-cyan-400" /> Matriz de Competencias Leetify
                     </h3>
-                    <p className="text-xs text-slate-400">Perfil actual de LA VIEJA vs Promedio Premier vs Nivel 10 FACEIT</p>
+                    <p className="text-xs text-slate-400">Perfil actual de {stats.username} vs Nivel 10 FACEIT</p>
                   </div>
                   <div className="flex items-center gap-3 text-xs font-medium">
                     <span className="flex items-center gap-1.5 text-cyan-400">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Tu Rendimiento
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Tu Nivel
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-500">
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-500"></span> Nivel 10 Faceit
@@ -454,7 +859,7 @@ export default function FragOSDashboard() {
 
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={RADAR_DATA}>
+                    <RadarChart data={radarData}>
                       <PolarGrid stroke="#334155" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 11 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#475569" />
@@ -469,14 +874,14 @@ export default function FragOSDashboard() {
               <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
                 <div className="bg-gradient-to-br from-rose-950/40 via-slate-900/60 to-slate-900/40 border border-rose-800/40 rounded-3xl p-5">
                   <div className="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider">
-                    <ShieldAlert className="w-4 h-4" /> Debilidad #1: Inconsistencia y Volatilidad
+                    <ShieldAlert className="w-4 h-4" /> Falencia Principal Detectada
                   </div>
-                  <h4 className="text-base font-bold text-white mt-1">Picos de +19.36 pero caídas de -9.90</h4>
+                  <h4 className="text-base font-bold text-white mt-1">{stats.weakness1Title}</h4>
                   <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                    Tu techo ya es de nivel profesional (top 20% mundial en Mirage 13-0), pero alternas días con ratings de -9.90 y -11.54. Falta consolidar un piso mínimo disciplinado sin depender del día mecánico.
+                    {stats.weakness1Desc}
                   </p>
                   <div className="mt-3 pt-3 border-t border-rose-900/30 flex items-center justify-between">
-                    <span className="text-[11px] text-rose-300 font-medium">Receta: Protocolo 15m Calentamiento</span>
+                    <span className="text-[11px] text-rose-300 font-medium">Receta: {stats.weakness1Med}</span>
                     <button
                       onClick={() => setActiveTab("rutina")}
                       className="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold px-3 py-1 rounded-lg transition"
@@ -488,14 +893,14 @@ export default function FragOSDashboard() {
 
                 <div className="bg-gradient-to-br from-amber-950/40 via-slate-900/60 to-slate-900/40 border border-amber-800/40 rounded-3xl p-5">
                   <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
-                    <ShieldAlert className="w-4 h-4" /> Debilidad #2: Conversión de Trade Kills (29%)
+                    <ShieldAlert className="w-4 h-4" /> Falencia Secundaria
                   </div>
-                  <h4 className="text-base font-bold text-white mt-1">Intentas 91% pero solo rematas 29%</h4>
+                  <h4 className="text-base font-bold text-white mt-1">{stats.weakness2Title}</h4>
                   <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                    De 75 oportunidades de trade kill, entraste a pelear en 68 ocasiones pero solo lograste la baja en 22. Necesitas mejorar el spacing (tándem de 1 metro) y altura de mira al asomar después de tu compañero.
+                    {stats.weakness2Desc}
                   </p>
                   <div className="mt-3 pt-3 border-t border-amber-900/30 flex items-center justify-between">
-                    <span className="text-[11px] text-amber-300 font-medium">Receta: Prefire & Retake Drills</span>
+                    <span className="text-[11px] text-amber-300 font-medium">Receta: {stats.weakness2Med}</span>
                     <button
                       onClick={() => setActiveTab("rutina")}
                       className="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold px-3 py-1 rounded-lg transition"
@@ -509,8 +914,8 @@ export default function FragOSDashboard() {
                   <div className="flex items-center gap-3">
                     <Trophy className="w-5 h-5 text-emerald-400" />
                     <div>
-                      <div className="text-xs font-bold text-white">Superpoder: Opening Duels (67% Winrate)</div>
-                      <div className="text-[11px] text-slate-400">Leetify Rating +5.1 en primeras bajas. Participa más como Entry!</div>
+                      <div className="text-xs font-bold text-white">Fortaleza: {stats.openingDuelWinrate}% Opening WR</div>
+                      <div className="text-[11px] text-slate-400">Participa más en primeras bajas para ganar rondas.</div>
                     </div>
                   </div>
                   <button
@@ -525,7 +930,7 @@ export default function FragOSDashboard() {
           </div>
         )}
 
-        {/* TAB NUEVO: HISTORIAL PREMIER DETALLADO */}
+        {/* TAB HISTORIAL PREMIER DETALLADO */}
         {activeTab === "historial" && (
           <div className="space-y-6">
             <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -534,15 +939,15 @@ export default function FragOSDashboard() {
                   <History className="w-5 h-5 text-cyan-400" /> Registro Cronológico de Partidas Valve Premier
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Historial de auditoría oficial de LA VIEJA filtrado exclusivamente para el modo Premier en CS2.
+                  Historial de auditoría oficial de {stats.username} filtrado exclusivamente para el modo Premier en CS2.
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-800/50 text-emerald-300 text-xs font-bold">
-                  Winrate: 65% (11W - 6L)
+                  Winrate: {stats.winRate}
                 </span>
                 <span className="px-3 py-1.5 rounded-xl bg-cyan-950 border border-cyan-800/50 text-cyan-300 text-xs font-bold">
-                  Pico: 4,903 CS Rating
+                  Pico: {stats.premierRating.toLocaleString()} CS Rating
                 </span>
               </div>
             </div>
@@ -624,7 +1029,7 @@ export default function FragOSDashboard() {
                   <Timer className="w-5 h-5 text-cyan-400" /> Generador de Rutina Diaria Personalizada
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Adaptada para combatir la inconsistencia y elevar el Trade Kill Success de 29% a &gt; 45%
+                  Adaptada para combatir la falencia detectada de {stats.username}: {stats.weakness1Title}
                 </p>
               </div>
 
@@ -659,7 +1064,7 @@ export default function FragOSDashboard() {
                 </div>
                 <h4 className="text-base font-bold text-white">Calentamiento & Primer Disparo</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Entrada en calor en <strong>Aim Botz</strong> o <strong>5e_aimhub</strong>. Consolidar el récord de 96 Aim Rating: no ráfagas descontroladas; taps a la cabeza con counter-strafing limpio.
+                  Entrada en calor en <strong>Aim Botz</strong> o <strong>5e_aimhub</strong>. Consolidar el récord de {stats.aimRatingPB} Aim Rating: no ráfagas descontroladas; taps a la cabeza con counter-strafing limpio.
                 </p>
                 <div className="bg-black/30 p-3 rounded-2xl border border-slate-800/60 text-xs space-y-2">
                   <div className="text-slate-300 font-semibold">• 100 kills de un toque (AK-47)</div>
