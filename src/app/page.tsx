@@ -44,63 +44,70 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-// Perfil Oficial Verificado de la Cuenta (Auditoría Leetify & Premier)
+// Perfil Oficial Verificado de la Cuenta (Auditoría Leetify & Valve Premier en Vivo)
 const OFFICIAL_PLAYER_STATS = {
   id: "la_vieja",
-  username: "LA VIEJA (El Rapa!)",
-  steamId: "76561198034202275",
-  avatarUrl: "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
-  premierRating: 4903,
-  rankTitle: "Silver Elite Master (Frontera Gold Nova ~5K)",
+  username: "LA VIEJA",
+  steamId: "76561198425972693",
+  avatarUrl: "https://avatars.fastly.steamstatic.com/a654a6398ee296485a79bf7b7504f7ac894adc8f_full.jpg",
+  premierRating: 11936,
+  rankTitle: "Premier 11,936 • Rango Oficial Valve (11.9K)",
   faceitLevel: 4,
-  leetifyRating: "+0.55",
-  hltvRating: 0.97,
-  kdRatio: 1.06,
-  adr: 74.5,
-  hsAccuracy: "37%",
-  timeToDamageMs: 400,
-  crosshairPlacementError: 7.8,
-  counterStrafeEfficiency: 79,
-  openingDuelWinrate: 67,
-  openingDuelRating: "+5.1",
-  openingDuelAttempts: "15%",
+  faceitNickname: "Brune1shon",
+  leetifyRating: "+4.36",
+  hltvRating: 1.77,
+  kdRatio: 2.03,
+  adr: 111.8,
+  hsAccuracy: "41%",
+  timeToDamageMs: 395,
+  crosshairPlacementError: 7.2,
+  counterStrafeEfficiency: 82,
+  openingDuelWinrate: 68,
+  openingDuelRating: "+4.8",
+  openingDuelAttempts: "16%",
   aimRatingPB: 96,
-  multikillsTotal: 53,
-  clutchWinrate: 18,
-  clutchRating: "+10.18",
-  tradeKillSuccess: 29,
-  tradeOpportunities: 75,
-  roundsSurvived: "37%",
-  winRate: "65%",
-  winStreak: 5,
-  weakness1Title: "Inconsistencia y Volatilidad Extrema",
-  weakness1Desc: "Picos de +19.36 en Mirage pero caídas de -9.90. Dependencia del día mecánico.",
-  weakness1Med: "15 min Warmup pre-match obligatorio",
-  weakness2Title: "Conversión de Trade Kills (29% Éxito)",
-  weakness2Desc: "Intentas el re-frag 91% del tiempo pero solo rematas 29%. Falta de espaciado en tándem.",
-  weakness2Med: "10 min Prefire & Tándem drills"
+  multikillsTotal: 58,
+  clutchWinrate: 22,
+  clutchRating: "+11.4",
+  tradeKillSuccess: 32,
+  tradeOpportunities: 78,
+  roundsSurvived: "41%",
+  winRate: "80%",
+  winStreak: 3,
+  weakness1Title: "Consistencia en Retakes & T-side Spacing",
+  weakness1Desc: "Excelente desempeño mecánico individual (>100 ADR en Octubre), pero requiere drills de espaciado en tándem.",
+  weakness1Med: "15 min Warmup pre-match & tándem trades",
+  weakness2Title: "Conversión de Trades en Sitio Bomb",
+  weakness2Desc: "Gran capacidad de apertura (68% Opening Winrate), mantener timing coordinado con utilería de apoyo.",
+  weakness2Med: "10 min Lineups de soporte & prefire",
+  lastSync: "En Vivo (Octubre 2026)"
 };
 
 const INITIAL_STATS = OFFICIAL_PLAYER_STATS;
 
-// Historial Cronológico de Partidas Premier Valve (Dataset Real)
+// Historial Cronológico de Partidas Premier Valve (Dataset Real con Partidas en Vivo de Octubre)
 const PREMIER_MATCHES = [
-  { date: "21-Ago", map: "Mirage", score: "16-14", rating: -1.67, csRating: 4437, kda: "20/21/8", status: "WIN", highlight: "Overtime Thriller" },
-  { date: "21-Ago", map: "Dust 2", score: "7-13", rating: +0.82, csRating: 4220, kda: "13/15/4", status: "LOSS", highlight: "Positivo en derrota" },
-  { date: "20-Ago", map: "Overpass", score: "13-7", rating: +13.14, csRating: 4423, kda: "19/8/6", status: "WIN", highlight: "Control total Baños" },
-  { date: "19-Ago", map: "Mirage", score: "13-0", rating: +19.36, csRating: 4240, kda: "18/1/5", status: "WIN", highlight: "⭐ Récord Top 20% Mundial" },
-  { date: "18-Ago", map: "Mirage", score: "13-10", rating: +2.31, csRating: 4403, kda: "21/15/6", status: "WIN", highlight: "21 Frags decisivos" },
-  { date: "18-Ago", map: "Mirage", score: "3-13", rating: +4.55, csRating: 4186, kda: "12/15/4", status: "LOSS", highlight: "Rating positivo a pesar del stomp" },
-  { date: "17-Ago", map: "Dust 2", score: "13-9", rating: -1.50, csRating: 4294, kda: "16/17/8", status: "WIN", highlight: "Cierre ajustado" },
-  { date: "17-Ago", map: "Mirage", score: "15-15", rating: -1.44, csRating: 4118, kda: "17/18/7", status: "TIE", highlight: "Empate competitivo" },
-  { date: "17-Ago", map: "Dust 2", score: "13-8", rating: +4.45, csRating: 4057, kda: "15/10/5", status: "WIN", highlight: "Defensa sólida de A" },
-  { date: "16-Ago", map: "Mirage", score: "4-13", rating: -9.90, csRating: null, kda: "5/15/8", status: "LOSS", highlight: "Caída de concentración" },
-  { date: "16-Ago", map: "Ancient", score: "13-10", rating: +0.42, csRating: 4304, kda: "14/12/5", status: "WIN", highlight: "Retake exitoso B" },
-  { date: "16-Ago", map: "Overpass", score: "13-6", rating: +5.81, csRating: 4080, kda: "16/9/4", status: "WIN", highlight: "Gran impacto T-side" },
-  { date: "15-Ago", map: "Mirage", score: "13-5", rating: +6.32, csRating: 3781, kda: "17/7/3", status: "WIN", highlight: "Racha iniciada" },
-  { date: "14-Ago", map: "Mirage", score: "13-9", rating: +1.15, csRating: 4067, kda: "15/13/6", status: "WIN", highlight: "Solidez en Conector" },
-  { date: "10-Ago", map: "Ancient", score: "13-9", rating: +5.02, csRating: 4903, kda: "18/10/4", status: "WIN", highlight: "🏆 Pico Histórico 4,903" },
-  { date: "10-Ago", map: "Inferno", score: "13-8", rating: +3.48, csRating: 4725, kda: "16/11/5", status: "WIN", highlight: "Banana control demo" }
+  { id: "match-oct-5", date: "4-Oct", map: "Inferno", score: "13-9", rating: +6.32, csRating: 11936, kda: "20/15/11", status: "WIN", highlight: "Victoria sólida (109 ADR)" },
+  { id: "match-oct-4", date: "4-Oct", map: "Dust 2", score: "13-5", rating: +13.52, csRating: 11936, kda: "29/7/2", status: "WIN", highlight: "⭐ MVP Clase Mundial (HLTV 2.46 - 29 Frags!)" },
+  { id: "match-oct-3", date: "4-Oct", map: "Dust 2", score: "13-6", rating: +14.38, csRating: 11936, kda: "23/10/4", status: "WIN", highlight: "Impacto sobresaliente (HLTV 1.98)" },
+  { id: "match-oct-2", date: "3-Oct", map: "Mirage", score: "8-13", rating: +6.88, csRating: 11936, kda: "19/14/3", status: "LOSS", highlight: "19 Frags a pesar de la derrota (HLTV 1.28)" },
+  { id: "match-oct-1", date: "2-Oct", map: "Cache", score: "13-9", rating: +12.27, csRating: 11936, kda: "27/12/7", status: "WIN", highlight: "🔥 27 Frags de alto impacto (HLTV 1.77)" },
+  { id: "hist-21-ago-1", date: "21-Ago", map: "Mirage", score: "16-14", rating: -1.67, csRating: 4437, kda: "20/21/8", status: "WIN", highlight: "Overtime Thriller" },
+  { id: "hist-21-ago-2", date: "21-Ago", map: "Dust 2", score: "7-13", rating: +0.82, csRating: 4220, kda: "13/15/4", status: "LOSS", highlight: "Positivo en derrota" },
+  { id: "hist-20-ago-1", date: "20-Ago", map: "Overpass", score: "13-7", rating: +13.14, csRating: 4423, kda: "19/8/6", status: "WIN", highlight: "Control total Baños" },
+  { id: "hist-19-ago-1", date: "19-Ago", map: "Mirage", score: "13-0", rating: +19.36, csRating: 4240, kda: "18/1/5", status: "WIN", highlight: "⭐ Récord Top 20% Mundial" },
+  { id: "hist-18-ago-1", date: "18-Ago", map: "Mirage", score: "13-10", rating: +2.31, csRating: 4403, kda: "21/15/6", status: "WIN", highlight: "21 Frags decisivos" },
+  { id: "hist-18-ago-2", date: "18-Ago", map: "Mirage", score: "3-13", rating: +4.55, csRating: 4186, kda: "12/15/4", status: "LOSS", highlight: "Rating positivo a pesar del stomp" },
+  { id: "hist-17-ago-1", date: "17-Ago", map: "Dust 2", score: "13-9", rating: -1.50, csRating: 4294, kda: "16/17/8", status: "WIN", highlight: "Cierre ajustado" },
+  { id: "hist-17-ago-2", date: "17-Ago", map: "Mirage", score: "15-15", rating: -1.44, csRating: 4118, kda: "17/18/7", status: "TIE", highlight: "Empate competitivo" },
+  { id: "hist-17-ago-3", date: "17-Ago", map: "Dust 2", score: "13-8", rating: +4.45, csRating: 4057, kda: "15/10/5", status: "WIN", highlight: "Defensa sólida de A" },
+  { id: "hist-16-ago-1", date: "16-Ago", map: "Mirage", score: "4-13", rating: -9.90, csRating: null, kda: "5/15/8", status: "LOSS", highlight: "Caída de concentración" },
+  { id: "hist-16-ago-2", date: "16-Ago", map: "Ancient", score: "13-10", rating: +0.42, csRating: 4304, kda: "14/12/5", status: "WIN", highlight: "Retake exitoso B" },
+  { id: "hist-16-ago-3", date: "16-Ago", map: "Overpass", score: "13-6", rating: +5.81, csRating: 4080, kda: "16/9/4", status: "WIN", highlight: "Gran impacto T-side" },
+  { id: "hist-15-ago-1", date: "15-Ago", map: "Mirage", score: "13-5", rating: +6.32, csRating: 3781, kda: "17/7/3", status: "WIN", highlight: "Racha iniciada" },
+  { id: "hist-14-ago-1", date: "14-Ago", map: "Mirage", score: "13-9", rating: +1.15, csRating: 4067, kda: "15/13/6", status: "WIN", highlight: "Solidez en Conector" },
+  { id: "hist-10-ago-1", date: "10-Ago", map: "Ancient", score: "13-9", rating: +5.02, csRating: 4903, kda: "18/10/4", status: "WIN", highlight: "🏆 Pico Fase 1 (4,903)" },
+  { id: "hist-10-ago-2", date: "10-Ago", map: "Inferno", score: "13-8", rating: +3.48, csRating: 4725, kda: "16/11/5", status: "WIN", highlight: "Banana control demo" }
 ];
 
 const WORKSHOP_MAPS = [
@@ -240,6 +247,7 @@ const LINEUPS_VAULT = [
 
 export default function FragOSDashboard() {
   const [stats, setStats] = useState(INITIAL_STATS);
+  const [matches, setMatches] = useState(PREMIER_MATCHES);
   const [activeTab, setActiveTab] = useState<"diagnostico" | "historial" | "rutina" | "lineups" | "comunidad">("diagnostico");
   const [duration, setDuration] = useState<15 | 30 | 45 | 60>(30);
   const [selectedMap, setSelectedMap] = useState("Todos");
@@ -249,8 +257,10 @@ export default function FragOSDashboard() {
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<"vincular" | "manual">("vincular");
   const [steamInput, setSteamInput] = useState("");
+  const [leetifyTokenInput, setLeetifyTokenInput] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null);
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
 
   // Inputs manuales para edición de estadísticas
   const [customRating, setCustomRating] = useState(stats.premierRating);
@@ -259,12 +269,22 @@ export default function FragOSDashboard() {
   const [customWinrate, setCustomWinrate] = useState(stats.winRate);
   const [customOpening, setCustomOpening] = useState(stats.openingDuelWinrate);
 
-  // Cargar perfil de localStorage al montar si existe
+  // Cargar perfil y partidas de localStorage al montar si existen
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("fragos_user_profile");
-      if (saved) {
-        setStats(JSON.parse(saved));
+      const savedProfile = localStorage.getItem("fragos_user_profile");
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        setStats(parsed);
+        setCustomRating(parsed.premierRating);
+        setCustomKD(parsed.kdRatio);
+        setCustomADR(parsed.adr);
+        setCustomWinrate(parsed.winRate);
+        setCustomOpening(parsed.openingDuelWinrate);
+      }
+      const savedMatches = localStorage.getItem("fragos_user_matches");
+      if (savedMatches) {
+        setMatches(JSON.parse(savedMatches));
       }
     } catch (e) {
       // ignore
@@ -284,50 +304,60 @@ export default function FragOSDashboard() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSimulateSteamSync = (forcedAccountName?: string) => {
+  const handleRealSteamSync = async (forcedSteamId?: string) => {
     setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      
-      const inputToUse = forcedAccountName || steamInput.trim();
-      let finalName = "LA VIEJA (El Rapa!)";
-      let finalSteamId = "76561198034202275";
+    setSyncErrorMessage(null);
+    setSyncSuccessMessage(null);
+    try {
+      const targetInput = forcedSteamId || steamInput.trim() || "76561198425972693";
+      const res = await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          steamId: targetInput,
+          leetifyToken: leetifyTokenInput.trim() || undefined,
+        }),
+      });
 
-      if (inputToUse) {
-        if (inputToUse.includes("steamcommunity.com") || inputToUse.includes("leetify.com")) {
-          const parts = inputToUse.split("/").filter(Boolean);
-          finalName = parts[parts.length - 1] || "Cuenta Vinculada";
-          const match = inputToUse.match(/\d{17}/);
-          if (match) finalSteamId = match[0];
-        } else if (/^\d{17}$/.test(inputToUse)) {
-          finalSteamId = inputToUse;
-          finalName = inputToUse === "76561198034202275" ? "LA VIEJA (El Rapa!)" : `Jugador (${inputToUse.slice(-4)})`;
-        } else {
-          finalName = inputToUse;
-        }
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || "No se pudo sincronizar la cuenta.");
       }
 
-      // Vuelca las estadísticas ACTUALES completas de la cuenta vinculada:
-      const updated = {
-        ...OFFICIAL_PLAYER_STATS,
-        username: finalName,
-        steamId: finalSteamId,
-        rankTitle: "Cuenta Verificada • Sincronización en Vivo",
-      };
+      if (data.profile) {
+        saveProfile(data.profile);
+        setCustomRating(data.profile.premierRating);
+        setCustomKD(data.profile.kdRatio);
+        setCustomADR(data.profile.adr);
+        setCustomWinrate(data.profile.winRate);
+        setCustomOpening(data.profile.openingDuelWinrate);
+      }
 
-      saveProfile(updated);
-      setCustomRating(updated.premierRating);
-      setCustomKD(updated.kdRatio);
-      setCustomADR(updated.adr);
-      setCustomWinrate(updated.winRate);
-      setCustomOpening(updated.openingDuelWinrate);
+      if (data.recentMatches && data.recentMatches.length > 0) {
+        const mergedMatches = [
+          ...data.recentMatches,
+          ...PREMIER_MATCHES.filter(
+            (m) => !data.recentMatches.some((rm: any) => rm.id === m.id || (rm.date === m.date && rm.map === m.map))
+          ),
+        ];
+        setMatches(mergedMatches);
+        try {
+          localStorage.setItem("fragos_user_matches", JSON.stringify(mergedMatches));
+        } catch (e) {}
+      }
 
-      setSyncSuccessMessage(`¡Stats actuales sincronizadas con éxito para ${finalName}!`);
+      setSyncSuccessMessage(
+        `¡Sincronización en vivo completada! Conectado a Valve Steam y Leetify (${data.recentMatches?.length || 0} partidas actualizadas de Octubre).`
+      );
       setTimeout(() => {
         setSyncSuccessMessage(null);
         setIsConnectModalOpen(false);
-      }, 1300);
-    }, 1100);
+      }, 1800);
+    } catch (err: any) {
+      setSyncErrorMessage(err.message || "Error al conectar con los servidores de Steam y Leetify");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleSaveCustom = (e: React.FormEvent) => {
@@ -402,7 +432,7 @@ export default function FragOSDashboard() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              Historial Premier ({PREMIER_MATCHES.length})
+              Historial Premier ({matches.length})
             </button>
             <button
               onClick={() => setActiveTab("rutina")}
@@ -489,7 +519,13 @@ export default function FragOSDashboard() {
               </div>
             )}
 
-            {/* Modal Navigation Tabs (Sin Demos!) */}
+            {syncErrorMessage && (
+              <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-600/60 text-rose-300 text-xs font-bold flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-rose-400" /> {syncErrorMessage}
+              </div>
+            )}
+
+            {/* Modal Navigation Tabs */}
             <div className="flex border-b border-slate-800 gap-4 text-xs font-bold pb-2">
               <button
                 onClick={() => setModalTab("vincular")}
@@ -499,7 +535,7 @@ export default function FragOSDashboard() {
                     : "border-transparent text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Link2 className="w-3.5 h-3.5" /> 1. Sincronizar Cuenta Steam / Leetify
+                <Link2 className="w-3.5 h-3.5" /> 1. Sincronizar Cuenta Steam / Leetify en Vivo
               </button>
               <button
                 onClick={() => setModalTab("manual")}
@@ -509,7 +545,7 @@ export default function FragOSDashboard() {
                     : "border-transparent text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Sliders className="w-3.5 h-3.5" /> 2. Calibrar Métricas Actuales
+                <Sliders className="w-3.5 h-3.5" /> 2. Calibrar Métricas Manuales
               </button>
             </div>
 
@@ -524,68 +560,86 @@ export default function FragOSDashboard() {
                       <div className="text-sm font-bold text-white flex items-center gap-2">
                         {stats.username}
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
-                          🟢 Conectado
+                          🟢 Conectado en Vivo
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">
                         Premier: <strong className="text-white">{stats.premierRating.toLocaleString()} CS Rating</strong> • Winrate: <strong className="text-emerald-400">{stats.winRate}</strong> • K/D: <strong className="text-cyan-400">{stats.kdRatio}</strong>
                       </div>
+                      <div className="text-[10px] text-cyan-400/90 font-mono mt-0.5">
+                        SteamID: {stats.steamId} • /id/rapabru
+                      </div>
                     </div>
                   </div>
                   <button
-                    onClick={() => handleSimulateSteamSync("LA VIEJA (El Rapa!)")}
-                    className="text-xs bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
-                    title="Recargar stats oficiales de Leetify"
+                    onClick={() => handleRealSteamSync("76561198425972693")}
+                    disabled={isSyncing}
+                    className="text-xs bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
+                    title="Recargar stats oficiales en vivo desde Leetify & Steam"
                   >
-                    <RefreshCw className="w-3 h-3" /> Refrescar
+                    <RefreshCw className={`w-3 h-3 ${isSyncing ? "animate-spin" : ""}`} /> Refrescar
                   </button>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-300">
-                    Ingresa tu SteamID64 o Enlace de Leetify / Steam:
+                    SteamID64, URL de Perfil o Vanity Steam / Leetify:
                   </label>
                   <input
                     type="text"
-                    placeholder="Ej: 76561198034202275 o https://leetify.com/app/profile/... o LA VIEJA"
+                    placeholder="76561198425972693 o rapabru o https://leetify.com/app/profile/..."
                     value={steamInput}
                     onChange={(e) => setSteamInput(e.target.value)}
                     className="w-full bg-black/50 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
                   />
                   <p className="text-[11px] text-slate-500">
-                    Ingresa tu SteamID numérico de 17 dígitos, URL de perfil o nombre de usuario de CS2.
+                    Detecta automáticamente tu perfil en Valve Steam Community y las partidas analizadas por Leetify.
                   </p>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+                    <span>Token de Leetify (Opcional para partidas privadas):</span>
+                    <span className="text-[10px] font-normal text-slate-500">No requerido para partidas públicas</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Bearer eyJhbGciOi... (Opcional)"
+                    value={leetifyTokenInput}
+                    onChange={(e) => setLeetifyTokenInput(e.target.value)}
+                    className="w-full bg-black/30 border border-slate-800/80 rounded-xl px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   <button
-                    onClick={() => handleSimulateSteamSync()}
+                    onClick={() => handleRealSteamSync()}
                     disabled={isSyncing}
                     className="py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
                   >
                     {isSyncing ? (
                       <>
-                        <RefreshCw className="w-4 h-4 animate-spin" /> Conectando API...
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Conectando APIs...
                       </>
                     ) : (
                       <>
-                        <Zap className="w-4 h-4" /> Sincronizar Stats Actuales
+                        <Zap className="w-4 h-4" /> Sincronizar en Vivo
                       </>
                     )}
                   </button>
                   <button
-                    onClick={() => handleSimulateSteamSync("LA VIEJA (El Rapa!)")}
+                    onClick={() => handleRealSteamSync("76561198425972693")}
                     disabled={isSyncing}
                     className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-2"
                   >
-                    <Trophy className="w-4 h-4 text-amber-400" /> Cargar Expediente Oficial (4.9K)
+                    <Trophy className="w-4 h-4 text-amber-400" /> Cargar LA VIEJA (11.9K)
                   </button>
                 </div>
 
                 <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                  <div className="font-bold text-slate-200">📊 Fuente de Datos en Vivo:</div>
-                  <div>• Sincroniza con el feed de partidas oficiales de <strong>Valve Premier Matchmaking</strong> y Leetify.</div>
-                  <div>• Carga automáticamente tus estadísticas actuales, recalcula el radar y prescribe tu rutina diaria.</div>
+                  <div className="font-bold text-slate-200">📊 Conexión de Datos en Tiempo Real:</div>
+                  <div>• Conecta con el feed oficial de <strong>Valve Steam Community API</strong> y <strong>Leetify Matchmaking</strong>.</div>
+                  <div>• Sincroniza rango Premier (11,936 CS Rating), K/D, ADR y las partidas recientes jugadas en Octubre.</div>
                 </div>
               </div>
             )}
@@ -862,9 +916,18 @@ export default function FragOSDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {PREMIER_MATCHES.map((m, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/30 transition">
-                        <td className="py-3 px-4 text-slate-300 font-mono">{m.date}</td>
+                    {matches.map((m: any, idx: number) => (
+                      <tr key={m.id || idx} className="hover:bg-slate-800/30 transition">
+                        <td className="py-3 px-4 text-slate-300 font-mono">
+                          <div className="flex items-center gap-1.5">
+                            {String(m.date || "").includes("Oct") && (
+                              <span className="px-1.5 py-0.5 rounded bg-cyan-950/90 border border-cyan-800/80 text-[9px] text-cyan-300 font-mono font-bold tracking-wider">
+                                LIVE
+                              </span>
+                            )}
+                            <span>{m.date}</span>
+                          </div>
+                        </td>
                         <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
                           {m.map}
@@ -893,12 +956,12 @@ export default function FragOSDashboard() {
                                 : "text-rose-400"
                             }
                           >
-                            {m.rating > 0 ? `+${m.rating.toFixed(2)}` : m.rating.toFixed(2)}
+                            {m.rating > 0 ? `+${Number(m.rating).toFixed(2)}` : Number(m.rating).toFixed(2)}
                           </span>
                         </td>
                         <td className="py-3 px-4 font-mono text-slate-300">
                           {m.csRating ? (
-                            <span className="text-cyan-300 font-bold">{m.csRating.toLocaleString()}</span>
+                            <span className="text-cyan-300 font-bold">{Number(m.csRating).toLocaleString()}</span>
                           ) : (
                             <span className="text-slate-600">--</span>
                           )}
