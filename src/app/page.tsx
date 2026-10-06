@@ -397,26 +397,26 @@ export default function FragOSDashboard() {
     <div className="min-h-screen bg-[#0b0e14] text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
       {/* Top Navbar */}
       <header className="border-b border-slate-800 bg-[#0d121c]/80 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
               <Crosshair className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <span className="font-extrabold tracking-wider text-xl bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className="font-extrabold tracking-wider text-xl bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap leading-none">
                 FragOS
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-cyan-400 font-mono ml-2 px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/50">
+              <span className="inline-flex items-center text-[10px] uppercase tracking-wider text-cyan-400 font-mono px-2 py-1 rounded-md bg-cyan-950/80 border border-cyan-800/60 whitespace-nowrap shrink-0 leading-none">
                 CS2 Academy & Analytics
               </span>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+          <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 overflow-x-auto">
             <button
               onClick={() => setActiveTab("diagnostico")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
                 activeTab === "diagnostico"
                   ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
                   : "text-slate-400 hover:text-white"
@@ -426,7 +426,7 @@ export default function FragOSDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("historial")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
                 activeTab === "historial"
                   ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
                   : "text-slate-400 hover:text-white"
@@ -436,7 +436,7 @@ export default function FragOSDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("rutina")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
                 activeTab === "rutina"
                   ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
                   : "text-slate-400 hover:text-white"
@@ -446,7 +446,7 @@ export default function FragOSDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("lineups")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
                 activeTab === "lineups"
                   ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
                   : "text-slate-400 hover:text-white"
@@ -456,7 +456,7 @@ export default function FragOSDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("comunidad")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
                 activeTab === "comunidad"
                   ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
                   : "text-slate-400 hover:text-white"
@@ -469,10 +469,10 @@ export default function FragOSDashboard() {
           {/* Interactive Player Badge & Sync Trigger */}
           <button
             onClick={() => setIsConnectModalOpen(true)}
-            className="flex items-center gap-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-3 py-1.5 rounded-xl transition text-left group cursor-pointer"
+            className="flex items-center gap-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-3 py-1.5 rounded-xl transition text-left group cursor-pointer shrink-0"
             title="Haz clic para conectar cuenta o cambiar perfil"
           >
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition shrink-0">
               <img src={stats.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block">
