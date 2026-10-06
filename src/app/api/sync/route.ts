@@ -16,8 +16,12 @@ const MAP_NAMES_MAP: Record<string, string> = {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    let input = (body.steamId || "76561198425972693").toString().trim();
+    let input = (body.steamId || "").toString().trim();
     const leetifyToken = body.leetifyToken?.trim();
+
+    if (!input) {
+      input = "76561198425972693"; // Default demo ID si viene vacío
+    }
 
     // Limpiar entrada si el usuario pegó una URL completa de Steam o Leetify
     if (input.includes("steamcommunity.com")) {
@@ -30,16 +34,19 @@ export async function POST(req: Request) {
 
     // Determinar si es SteamID64 (17 dígitos numéricos) o Vanity URL
     let isNumeric64 = /^\d{17}$/.test(input);
-    let steam64 = isNumeric64 ? input : "76561198425972693";
+    let isKnownLaVieja = input === "76561198425972693" || input.toLowerCase() === "rapabru";
+    let steam64 = isNumeric64 ? input : (isKnownLaVieja ? "76561198425972693" : input);
 
-    // Objeto base con la identidad conocida de LA VIEJA
+    // Datos base por defecto
     let steamData = {
       steamId: steam64,
-      username: "LA VIEJA",
-      avatarUrl: "https://avatars.fastly.steamstatic.com/a654a6398ee296485a79bf7b7504f7ac894adc8f_full.jpg",
+      username: isKnownLaVieja ? "LA VIEJA" : (isNumeric64 ? `Jugador (${input.slice(-4)})` : input),
+      avatarUrl: isKnownLaVieja
+        ? "https://avatars.fastly.steamstatic.com/a654a6398ee296485a79bf7b7504f7ac894adc8f_full.jpg"
+        : "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
       onlineState: "online",
       stateMessage: "Online",
-      customUrl: "rapabru",
+      customUrl: isKnownLaVieja ? "rapabru" : "",
     };
 
     // 1. Consulta en tiempo real a la API XML oficial de Steam Community
@@ -82,9 +89,9 @@ export async function POST(req: Request) {
     }
 
     // 2. Consulta en vivo a la API de Leetify (Mini-Profiles)
-    let premierRating = 11936;
-    let faceitLevel = 4;
-    let faceitNickname = "Brune1shon";
+    let premierRating = isKnownLaVieja ? 11936 : 0;
+    let faceitLevel = isKnownLaVieja ? 4 : 0;
+    let faceitNickname = isKnownLaVieja ? "Brune1shon" : "";
     let miniProfile: any = null;
     let recentMatchesList: any[] = [];
 
@@ -99,7 +106,7 @@ export async function POST(req: Request) {
 
       if (miniRes.ok) {
         miniProfile = await miniRes.json();
-        
+
         // Extraer nombre y avatar oficial si están en Leetify
         if (miniProfile.name) steamData.username = miniProfile.name;
         if (miniProfile.steamAvatarUrl) steamData.avatarUrl = miniProfile.steamAvatarUrl;
@@ -117,7 +124,7 @@ export async function POST(req: Request) {
           faceitLevel = faceitObj.skillLevel;
         }
 
-        // 3. Consultar las partidas recientes de Octubre en tiempo real
+        // 3. Consultar las partidas recientes en tiempo real
         const matchPromises = (miniProfile.recentMatches || []).slice(0, 8).map(async (rm: any) => {
           try {
             const gRes = await fetch(`https://api.cs-prod.leetify.com/api/games/${rm.id}`, {
@@ -148,11 +155,12 @@ export async function POST(req: Request) {
               ? `${Math.max(s1, s2)}-${Math.min(s1, s2)}`
               : (isTie ? `${s1}-${s2}` : `${Math.min(s1, s2)}-${Math.max(s1, s2)}`);
 
-            let highlight = "Victoria sólida";
-            if (p.hltvRating >= 2.0) highlight = `⭐ MVP Clase Mundial (HLTV ${p.hltvRating.toFixed(2)})`;
+            let highlight = "Partida analizada";
+            if (p.hltvRating >= 2.0) highlight = `⭐ MVP Destacado (HLTV ${p.hltvRating.toFixed(2)})`;
             else if ((p.totalKills || 0) >= 25) highlight = `🔥 ${p.totalKills} Frags de alto impacto`;
             else if (p.hltvRating >= 1.5) highlight = `Impacto decisivo (${p.hltvRating.toFixed(2)} HLTV)`;
-            else if (!isWin) highlight = `Luchado (${p.totalKills || 0} frags)`;
+            else if (isWin) highlight = "Victoria competitiva";
+            else highlight = `Luchado (${p.totalKills || 0} frags)`;
 
             return {
               id: rm.id,
@@ -161,8 +169,8 @@ export async function POST(req: Request) {
               map: mapName,
               score: scoreStr,
               rating: p.leetifyRating ? Number((p.leetifyRating * 100).toFixed(2)) : +5.0,
-              hltvRating: p.hltvRating ? Number(p.hltvRating.toFixed(2)) : 1.2,
-              csRating: premierRating,
+              hltvRating: p.hltvRating ? Number(p.hltvRating.toFixed(2)) : 1.1,
+              csRating: premierRating || 0,
               kda: `${p.totalKills || 0}/${p.totalDeaths || 0}/${p.totalAssists || 0}`,
               adr: adr,
               status: status,
@@ -184,11 +192,11 @@ export async function POST(req: Request) {
       console.error("Error al consultar Leetify mini-profile:", err);
     }
 
-    // Métricas calculadas basadas en las partidas recientes si están disponibles
-    let calcKD = 1.65;
-    let calcADR = 105.0;
-    let calcWinrate = "80%";
-    let calcStreak = 3;
+    // Métricas calculadas
+    let calcKD = isKnownLaVieja ? 2.03 : 1.15;
+    let calcADR = isKnownLaVieja ? 111.8 : 78.5;
+    let calcWinrate = isKnownLaVieja ? "80%" : "55%";
+    let calcStreak = isKnownLaVieja ? 3 : 1;
 
     if (recentMatchesList.length > 0) {
       const totalKills = recentMatchesList.reduce((acc, m) => acc + (m.rawKills || 0), 0);
@@ -197,11 +205,10 @@ export async function POST(req: Request) {
       const totalRounds = recentMatchesList.reduce((acc, m) => acc + (m.rawRounds || 0), 0);
       const winsCount = recentMatchesList.filter((m) => m.status === "WIN").length;
 
-      calcKD = totalDeaths > 0 ? Number((totalKills / totalDeaths).toFixed(2)) : 2.0;
-      calcADR = totalRounds > 0 ? Number((totalDmg / totalRounds).toFixed(1)) : 105.0;
+      calcKD = totalDeaths > 0 ? Number((totalKills / totalDeaths).toFixed(2)) : 1.5;
+      calcADR = totalRounds > 0 ? Number((totalDmg / totalRounds).toFixed(1)) : 80.0;
       calcWinrate = `${Math.round((winsCount / recentMatchesList.length) * 100)}%`;
 
-      // Calcular racha actual desde la más reciente
       calcStreak = 0;
       for (const m of recentMatchesList) {
         if (m.status === "WIN") calcStreak++;
@@ -211,13 +218,14 @@ export async function POST(req: Request) {
     }
 
     // Leetify ratings combinados
-    const aimRating = miniProfile?.ratings?.aim ? Math.round(miniProfile.ratings.aim) : 66;
+    const aimRating = miniProfile?.ratings?.aim ? Math.round(miniProfile.ratings.aim) : (isKnownLaVieja ? 96 : 68);
     const leetifyScore = miniProfile?.ratings?.leetify
       ? (miniProfile.ratings.leetify > 0 ? `+${(miniProfile.ratings.leetify * 10).toFixed(2)}` : `${(miniProfile.ratings.leetify * 10).toFixed(2)}`)
-      : "+0.55";
+      : (isKnownLaVieja ? "+4.36" : "+0.15");
 
     const profileData = {
-      id: "la_vieja",
+      id: steamData.steamId,
+      isGuest: false,
       username: steamData.username,
       steamId: steamData.steamId,
       customUrl: steamData.customUrl,
@@ -225,11 +233,13 @@ export async function POST(req: Request) {
       onlineState: steamData.onlineState,
       stateMessage: steamData.stateMessage,
       premierRating: premierRating,
-      rankTitle: `Premier ${premierRating.toLocaleString()} • Rango Oficial Valve`,
+      rankTitle: premierRating > 0
+        ? `Premier ${premierRating.toLocaleString()} • Rango Oficial Valve`
+        : "Sin Rango Premier (Modo Calibración)",
       faceitLevel: faceitLevel,
       faceitNickname: faceitNickname,
       leetifyRating: leetifyScore,
-      hltvRating: recentMatchesList.length > 0 ? recentMatchesList[0].hltvRating : 1.25,
+      hltvRating: recentMatchesList.length > 0 ? recentMatchesList[0].hltvRating : 1.05,
       kdRatio: calcKD,
       adr: calcADR,
       hsAccuracy: "41%",
@@ -239,8 +249,8 @@ export async function POST(req: Request) {
       openingDuelWinrate: 68,
       openingDuelRating: "+4.8",
       openingDuelAttempts: "16%",
-      aimRatingPB: aimRating > 0 ? Math.max(aimRating, 96) : 96,
-      multikillsTotal: 58,
+      aimRatingPB: aimRating,
+      multikillsTotal: isKnownLaVieja ? 58 : 25,
       clutchWinrate: 22,
       clutchRating: "+11.4",
       tradeKillSuccess: 32,
@@ -248,11 +258,15 @@ export async function POST(req: Request) {
       roundsSurvived: "41%",
       winRate: calcWinrate,
       winStreak: calcStreak,
-      weakness1Title: "Consistencia en Retakes & T-side Spacing",
-      weakness1Desc: "Excelente desempeño mecánico individual (>100 ADR en Octubre), pero requiere drills de espaciado en tándem.",
+      weakness1Title: isKnownLaVieja ? "Consistencia en Retakes & T-side Spacing" : "Optimización de Primer Contacto",
+      weakness1Desc: isKnownLaVieja
+        ? "Excelente desempeño mecánico individual (>100 ADR en Octubre), pero requiere drills de espaciado en tándem."
+        : "Calibra tus rutinas diarias para mejorar tu porcentaje de supervivencia y conversión en rondas de compra completa.",
       weakness1Med: "15 min Warmup pre-match & tándem trades",
-      weakness2Title: "Conversión de Trades en Sitio Bomb",
-      weakness2Desc: "Gran capacidad de apertura (68% Opening Winrate), mantener timing coordinado con utilería de apoyo.",
+      weakness2Title: isKnownLaVieja ? "Conversión de Trades en Sitio Bomb" : "Control de Recoil en Duelos Largos",
+      weakness2Desc: isKnownLaVieja
+        ? "Gran capacidad de apertura (68% Opening Winrate), mantener timing coordinado con utilería de apoyo."
+        : "Practica drills de contra-strafe para asegurar el primer disparo en duelos de larga distancia.",
       weakness2Med: "10 min Lineups de soporte & prefire",
       lastSync: new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
     };

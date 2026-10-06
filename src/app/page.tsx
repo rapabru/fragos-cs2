@@ -83,7 +83,48 @@ const OFFICIAL_PLAYER_STATS = {
   lastSync: "En Vivo (Octubre 2026)"
 };
 
-const INITIAL_STATS = OFFICIAL_PLAYER_STATS;
+// Perfil de Invitado inicial cuando un nuevo usuario entra a la web sin conectar
+const GUEST_DEFAULT_STATS = {
+  id: "guest",
+  isGuest: true,
+  isDemo: false,
+  username: "Invitado",
+  steamId: "",
+  avatarUrl: "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
+  premierRating: 0,
+  rankTitle: "Perfil Sin Conectar • Vincula tu Steam",
+  faceitLevel: 0,
+  faceitNickname: "",
+  leetifyRating: "--",
+  hltvRating: 0.0,
+  kdRatio: 0.0,
+  adr: 0.0,
+  hsAccuracy: "0%",
+  timeToDamageMs: 0,
+  crosshairPlacementError: 0,
+  counterStrafeEfficiency: 0,
+  openingDuelWinrate: 0,
+  openingDuelRating: "--",
+  openingDuelAttempts: "0%",
+  aimRatingPB: 0,
+  multikillsTotal: 0,
+  clutchWinrate: 0,
+  clutchRating: "--",
+  tradeKillSuccess: 0,
+  tradeOpportunities: 0,
+  roundsSurvived: "0%",
+  winRate: "0%",
+  winStreak: 0,
+  weakness1Title: "Conecta tu perfil para calcular diagnóstico",
+  weakness1Desc: "FragOS analiza tus partidas de Premier y Leetify para diagnosticar tus falencias y prescribir rutinas a medida.",
+  weakness1Med: "Ingresa tu perfil en el botón superior",
+  weakness2Title: "Rutinas adaptativas bloqueadas",
+  weakness2Desc: "Las rutinas diarias se generan en función de tu K/D, opening duels y espaciado en tándem.",
+  weakness2Med: "Vincula tu Steam para desbloquear",
+  lastSync: "No conectado"
+};
+
+const INITIAL_STATS = GUEST_DEFAULT_STATS;
 
 // Historial Cronológico de Partidas Premier Valve (Dataset Real con Partidas en Vivo de Octubre)
 const PREMIER_MATCHES = [
@@ -247,7 +288,7 @@ const LINEUPS_VAULT = [
 
 export default function FragOSDashboard() {
   const [stats, setStats] = useState(INITIAL_STATS);
-  const [matches, setMatches] = useState(PREMIER_MATCHES);
+  const [matches, setMatches] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"diagnostico" | "historial" | "rutina" | "lineups" | "comunidad">("diagnostico");
   const [duration, setDuration] = useState<15 | 30 | 45 | 60>(30);
   const [selectedMap, setSelectedMap] = useState("Todos");
@@ -276,11 +317,14 @@ export default function FragOSDashboard() {
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
         setStats(parsed);
-        setCustomRating(parsed.premierRating);
-        setCustomKD(parsed.kdRatio);
-        setCustomADR(parsed.adr);
-        setCustomWinrate(parsed.winRate);
-        setCustomOpening(parsed.openingDuelWinrate);
+        setCustomRating(parsed.premierRating || 0);
+        setCustomKD(parsed.kdRatio || 0);
+        setCustomADR(parsed.adr || 0);
+        setCustomWinrate(parsed.winRate || "0%");
+        setCustomOpening(parsed.openingDuelWinrate || 0);
+      } else {
+        // Primera vez que entra el usuario a la web: ¡Pedir su perfil inmediatamente!
+        setIsConnectModalOpen(true);
       }
       const savedMatches = localStorage.getItem("fragos_user_matches");
       if (savedMatches) {
@@ -304,12 +348,49 @@ export default function FragOSDashboard() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Cargar perfil demo para que cualquier visitante pueda probar la web
+  const handleLoadDemoProfile = () => {
+    const demoProfile = {
+      ...OFFICIAL_PLAYER_STATS,
+      isGuest: false,
+      isDemo: true,
+    };
+    saveProfile(demoProfile);
+    setMatches(PREMIER_MATCHES);
+    try {
+      localStorage.setItem("fragos_user_matches", JSON.stringify(PREMIER_MATCHES));
+    } catch (e) {}
+    setCustomRating(demoProfile.premierRating);
+    setCustomKD(demoProfile.kdRatio);
+    setCustomADR(demoProfile.adr);
+    setCustomWinrate(demoProfile.winRate);
+    setCustomOpening(demoProfile.openingDuelWinrate);
+    setIsConnectModalOpen(false);
+  };
+
+  // Desconectar o cambiar de cuenta
+  const handleDisconnectProfile = () => {
+    try {
+      localStorage.removeItem("fragos_user_profile");
+      localStorage.removeItem("fragos_user_matches");
+    } catch (e) {}
+    setStats(GUEST_DEFAULT_STATS);
+    setMatches([]);
+    setSteamInput("");
+    setIsConnectModalOpen(true);
+  };
+
   const handleRealSteamSync = async (forcedSteamId?: string) => {
+    const targetInput = (forcedSteamId || steamInput).trim();
+    if (!targetInput) {
+      setSyncErrorMessage("Por favor ingresa tu SteamID64, enlace de perfil de Steam o usuario de Leetify.");
+      return;
+    }
+
     setIsSyncing(true);
     setSyncErrorMessage(null);
     setSyncSuccessMessage(null);
     try {
-      const targetInput = forcedSteamId || steamInput.trim() || "76561198425972693";
       const res = await fetch("/api/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -325,34 +406,38 @@ export default function FragOSDashboard() {
       }
 
       if (data.profile) {
-        saveProfile(data.profile);
-        setCustomRating(data.profile.premierRating);
-        setCustomKD(data.profile.kdRatio);
-        setCustomADR(data.profile.adr);
-        setCustomWinrate(data.profile.winRate);
-        setCustomOpening(data.profile.openingDuelWinrate);
+        const fullProfile = {
+          ...data.profile,
+          isGuest: false,
+          isDemo: false,
+        };
+        saveProfile(fullProfile);
+        setCustomRating(fullProfile.premierRating);
+        setCustomKD(fullProfile.kdRatio);
+        setCustomADR(fullProfile.adr);
+        setCustomWinrate(fullProfile.winRate);
+        setCustomOpening(fullProfile.openingDuelWinrate);
       }
 
       if (data.recentMatches && data.recentMatches.length > 0) {
-        const mergedMatches = [
-          ...data.recentMatches,
-          ...PREMIER_MATCHES.filter(
-            (m) => !data.recentMatches.some((rm: any) => rm.id === m.id || (rm.date === m.date && rm.map === m.map))
-          ),
-        ];
-        setMatches(mergedMatches);
+        setMatches(data.recentMatches);
         try {
-          localStorage.setItem("fragos_user_matches", JSON.stringify(mergedMatches));
+          localStorage.setItem("fragos_user_matches", JSON.stringify(data.recentMatches));
+        } catch (e) {}
+      } else {
+        setMatches([]);
+        try {
+          localStorage.setItem("fragos_user_matches", JSON.stringify([]));
         } catch (e) {}
       }
 
       setSyncSuccessMessage(
-        `¡Sincronización en vivo completada! Conectado a Valve Steam y Leetify (${data.recentMatches?.length || 0} partidas actualizadas de Octubre).`
+        `¡Perfil sincronizado con éxito para ${data.profile?.username || targetInput}! (${data.recentMatches?.length || 0} partidas cargadas).`
       );
       setTimeout(() => {
         setSyncSuccessMessage(null);
         setIsConnectModalOpen(false);
-      }, 1800);
+      }, 1600);
     } catch (err: any) {
       setSyncErrorMessage(err.message || "Error al conectar con los servidores de Steam y Leetify");
     } finally {
@@ -467,28 +552,105 @@ export default function FragOSDashboard() {
           </nav>
 
           {/* Interactive Player Badge & Sync Trigger */}
-          <button
-            onClick={() => setIsConnectModalOpen(true)}
-            className="flex items-center gap-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-3 py-1.5 rounded-xl transition text-left group cursor-pointer shrink-0"
-            title="Haz clic para conectar cuenta o cambiar perfil"
-          >
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition shrink-0">
-              <img src={stats.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
-                {stats.username}
-                <span className="text-[10px] px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30">
-                  {stats.winRate} WR
-                </span>
+          {stats.isGuest ? (
+            <button
+              onClick={() => {
+                setModalTab("vincular");
+                setIsConnectModalOpen(true);
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold px-3.5 py-2 rounded-xl transition text-xs shadow-lg shadow-cyan-500/25 shrink-0 cursor-pointer"
+            >
+              <Link2 className="w-4 h-4" />
+              <span>Conectar Perfil</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsConnectModalOpen(true)}
+              className="flex items-center gap-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-3 py-1.5 rounded-xl transition text-left group cursor-pointer shrink-0"
+              title="Haz clic para conectar cuenta o cambiar perfil"
+            >
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition shrink-0">
+                <img src={stats.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               </div>
-              <div className="text-[10px] text-cyan-400 font-mono font-medium flex items-center gap-1">
-                Pico {stats.premierRating.toLocaleString()} • Sincronizar <RefreshCw className="w-2.5 h-2.5 group-hover:rotate-180 transition-transform duration-500" />
+              <div className="hidden sm:block">
+                <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                  {stats.username}
+                  <span
+                    className={`text-[10px] px-1 py-0.2 rounded border ${
+                      stats.isDemo
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    }`}
+                  >
+                    {stats.isDemo ? "Demo" : `${stats.winRate} WR`}
+                  </span>
+                </div>
+                <div className="text-[10px] text-cyan-400 font-mono font-medium flex items-center gap-1">
+                  {stats.premierRating > 0 ? `${stats.premierRating.toLocaleString()} CS Rating` : "Conectado"} • Sincronizar{" "}
+                  <RefreshCw className="w-2.5 h-2.5 group-hover:rotate-180 transition-transform duration-500" />
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
+          )}
         </div>
       </header>
+
+      {/* Top Banner if Guest or Demo */}
+      {stats.isGuest && (
+        <div className="bg-gradient-to-r from-cyan-950 via-slate-900 to-slate-950 border-b border-cyan-800/40 px-4 py-2.5 text-xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-slate-200">
+            <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+            <span>
+              <strong>¡Bienvenido a FragOS CS2!</strong> Vincula tu cuenta de Steam o Leetify para cargar tus partidas y generar tu diagnóstico personalizado.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setModalTab("vincular");
+                setIsConnectModalOpen(true);
+              }}
+              className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-md shadow-cyan-500/20 cursor-pointer"
+            >
+              Vincular Mi Cuenta
+            </button>
+            <button
+              onClick={handleLoadDemoProfile}
+              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition border border-slate-700 cursor-pointer"
+            >
+              Probar Demo (LA VIEJA)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {stats.isDemo && (
+        <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-950 border-b border-amber-800/30 px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-slate-300">
+            <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              Estás viendo el <strong>Perfil de Demostración de LA VIEJA (11,936 CS Rating)</strong>. Conecta tu perfil para ver tus métricas reales.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setModalTab("vincular");
+                setIsConnectModalOpen(true);
+              }}
+              className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-md shadow-cyan-500/20 cursor-pointer"
+            >
+              Conectar Mi Cuenta
+            </button>
+            <button
+              onClick={handleDisconnectProfile}
+              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition border border-slate-700 cursor-pointer"
+            >
+              Salir de Demo
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL INTERACTIVO: CONECTAR CUENTA & CAMBIAR PERFIL */}
       {isConnectModalOpen && (
@@ -496,7 +658,7 @@ export default function FragOSDashboard() {
           <div className="bg-[#0f141f] border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 relative">
             <button
               onClick={() => setIsConnectModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/60 transition"
+              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/60 transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -506,10 +668,12 @@ export default function FragOSDashboard() {
                 <Link2 className="w-3.5 h-3.5" /> Sincronización de Cuenta Steam & Leetify
               </div>
               <h3 className="text-xl font-black text-white mt-2">
-                Conectar Jugador / Cliente
+                {stats.isGuest ? "¡Bienvenido! Conecta tu Perfil de CS2" : "Conectar / Cambiar Cuenta"}
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Sincroniza tu SteamID o selecciona entre perfiles de muestra para probar la calibración de rutinas y radar.
+                {stats.isGuest
+                  ? "Ingresa tu perfil de Steam o Leetify para generar tu análisis en tiempo real y matriz de rendimiento personalizada."
+                  : "Sincroniza tus estadísticas actuales o cambia a otra cuenta para recalcular el radar y las rutinas."}
               </p>
             </div>
 
@@ -529,7 +693,7 @@ export default function FragOSDashboard() {
             <div className="flex border-b border-slate-800 gap-4 text-xs font-bold pb-2">
               <button
                 onClick={() => setModalTab("vincular")}
-                className={`pb-1 border-b-2 transition flex items-center gap-1.5 ${
+                className={`pb-1 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
                   modalTab === "vincular"
                     ? "border-cyan-400 text-cyan-400"
                     : "border-transparent text-slate-400 hover:text-slate-200"
@@ -539,7 +703,7 @@ export default function FragOSDashboard() {
               </button>
               <button
                 onClick={() => setModalTab("manual")}
-                className={`pb-1 border-b-2 transition flex items-center gap-1.5 ${
+                className={`pb-1 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
                   modalTab === "manual"
                     ? "border-cyan-400 text-cyan-400"
                     : "border-transparent text-slate-400 hover:text-slate-200"
@@ -552,55 +716,94 @@ export default function FragOSDashboard() {
             {/* TAB 1: VINCULAR STEAM & EXTRAER STATS ACTUALES */}
             {modalTab === "vincular" && (
               <div className="space-y-4">
-                {/* Tarjeta de Cuenta Actual Conectada */}
-                <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-800/50 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src={stats.avatarUrl} className="w-12 h-12 rounded-xl border border-cyan-500/50" alt="Avatar" />
+                {/* Tarjeta de Cuenta Actual o Estado de Invitado */}
+                {stats.isGuest ? (
+                  <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-800/40 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                      <User className="w-6 h-6 text-cyan-400" />
+                    </div>
                     <div>
-                      <div className="text-sm font-bold text-white flex items-center gap-2">
-                        {stats.username}
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
-                          🟢 Conectado en Vivo
-                        </span>
-                      </div>
+                      <div className="text-sm font-bold text-white">Ningún Perfil Vinculado Todavía</div>
                       <div className="text-xs text-slate-400 mt-0.5">
-                        Premier: <strong className="text-white">{stats.premierRating.toLocaleString()} CS Rating</strong> • Winrate: <strong className="text-emerald-400">{stats.winRate}</strong> • K/D: <strong className="text-cyan-400">{stats.kdRatio}</strong>
-                      </div>
-                      <div className="text-[10px] text-cyan-400/90 font-mono mt-0.5">
-                        SteamID: {stats.steamId} • /id/rapabru
+                        Ingresa tu SteamID64, enlace de perfil o usuario para extraer tus datos exactos de Valve & Leetify.
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRealSteamSync("76561198425972693")}
-                    disabled={isSyncing}
-                    className="text-xs bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
-                    title="Recargar stats oficiales en vivo desde Leetify & Steam"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${isSyncing ? "animate-spin" : ""}`} /> Refrescar
-                  </button>
-                </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-800/50 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img src={stats.avatarUrl} className="w-12 h-12 rounded-xl border border-cyan-500/50 object-cover" alt="Avatar" />
+                      <div>
+                        <div className="text-sm font-bold text-white flex items-center gap-2">
+                          {stats.username}
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${
+                              stats.isDemo
+                                ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                                : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            }`}
+                          >
+                            {stats.isDemo ? "🟡 Modo Demo" : "🟢 Conectado en Vivo"}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          Premier: <strong className="text-white">{stats.premierRating > 0 ? `${stats.premierRating.toLocaleString()} CS Rating` : "Sin Rango"}</strong> • Winrate: <strong className="text-emerald-400">{stats.winRate}</strong> • K/D: <strong className="text-cyan-400">{stats.kdRatio}</strong>
+                        </div>
+                        {stats.steamId && (
+                          <div className="text-[10px] text-cyan-400/90 font-mono mt-0.5">
+                            SteamID: {stats.steamId}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleRealSteamSync(stats.steamId)}
+                        disabled={isSyncing}
+                        className="text-xs bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                        title="Recargar stats oficiales en vivo"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isSyncing ? "animate-spin" : ""}`} /> Refrescar
+                      </button>
+                      <button
+                        onClick={handleDisconnectProfile}
+                        className="text-xs bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+                        title="Desconectar y cambiar cuenta"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300">
-                    SteamID64, URL de Perfil o Vanity Steam / Leetify:
+                  <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                    <span>Tu SteamID64, URL de Perfil o Vanity Steam / Leetify:</span>
+                    <span className="text-[11px] text-cyan-400 font-normal">Detecta Valve & Leetify</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="76561198425972693 o rapabru o https://leetify.com/app/profile/..."
+                    placeholder="Pega tu enlace de Steam, SteamID de 17 dígitos o usuario de Leetify..."
                     value={steamInput}
                     onChange={(e) => setSteamInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleRealSteamSync();
+                      }
+                    }}
+                    autoFocus
                     className="w-full bg-black/50 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
                   />
                   <p className="text-[11px] text-slate-500">
-                    Detecta automáticamente tu perfil en Valve Steam Community y las partidas analizadas por Leetify.
+                    Acepta tu SteamID numérico de 17 dígitos (ej: <code>76561198425972693</code>), enlace de perfil, o Vanity URL.
                   </p>
                 </div>
 
                 <div className="space-y-1.5 pt-1">
                   <label className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
                     <span>Token de Leetify (Opcional para partidas privadas):</span>
-                    <span className="text-[10px] font-normal text-slate-500">No requerido para partidas públicas</span>
+                    <span className="text-[10px] font-normal text-slate-500">No requerido para perfiles públicos</span>
                   </label>
                   <input
                     type="password"
@@ -614,8 +817,8 @@ export default function FragOSDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   <button
                     onClick={() => handleRealSteamSync()}
-                    disabled={isSyncing}
-                    className="py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+                    disabled={isSyncing || !steamInput.trim()}
+                    className="py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer"
                   >
                     {isSyncing ? (
                       <>
@@ -623,23 +826,23 @@ export default function FragOSDashboard() {
                       </>
                     ) : (
                       <>
-                        <Zap className="w-4 h-4" /> Sincronizar en Vivo
+                        <Zap className="w-4 h-4" /> Vincular Mis Estadísticas
                       </>
                     )}
                   </button>
                   <button
-                    onClick={() => handleRealSteamSync("76561198425972693")}
+                    onClick={handleLoadDemoProfile}
                     disabled={isSyncing}
-                    className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-2"
+                    className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Trophy className="w-4 h-4 text-amber-400" /> Cargar LA VIEJA (11.9K)
+                    <Trophy className="w-4 h-4 text-amber-400" /> Probar Demo (LA VIEJA 11.9K)
                   </button>
                 </div>
 
                 <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                  <div className="font-bold text-slate-200">📊 Conexión de Datos en Tiempo Real:</div>
-                  <div>• Conecta con el feed oficial de <strong>Valve Steam Community API</strong> y <strong>Leetify Matchmaking</strong>.</div>
-                  <div>• Sincroniza rango Premier (11,936 CS Rating), K/D, ADR y las partidas recientes jugadas en Octubre.</div>
+                  <div className="font-bold text-slate-200">📊 Conexión Segura en Tiempo Real:</div>
+                  <div>• Conecta con <strong>Valve Steam Community</strong> y <strong>Leetify Matchmaking</strong> de forma no invasiva.</div>
+                  <div>• Tus datos quedan guardados de forma privada únicamente en tu navegador.</div>
                 </div>
               </div>
             )}
@@ -916,59 +1119,92 @@ export default function FragOSDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {matches.map((m: any, idx: number) => (
-                      <tr key={m.id || idx} className="hover:bg-slate-800/30 transition">
-                        <td className="py-3 px-4 text-slate-300 font-mono">
-                          <div className="flex items-center gap-1.5">
-                            {String(m.date || "").includes("Oct") && (
-                              <span className="px-1.5 py-0.5 rounded bg-cyan-950/90 border border-cyan-800/80 text-[9px] text-cyan-300 font-mono font-bold tracking-wider">
-                                LIVE
-                              </span>
-                            )}
-                            <span>{m.date}</span>
+                    {matches.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-slate-500">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <History className="w-8 h-8 text-slate-600" />
+                            <span className="text-xs font-semibold text-slate-300">
+                              No hay partidas sincronizadas todavía para esta cuenta.
+                            </span>
+                            <span className="text-[11px] text-slate-500 max-w-sm">
+                              Vincula tu perfil de Steam o Leetify para descargar tus partidas analizadas, o prueba el perfil demo de muestra.
+                            </span>
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={() => {
+                                  setModalTab("vincular");
+                                  setIsConnectModalOpen(true);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-cyan-500 text-black text-xs font-bold hover:bg-cyan-400 transition cursor-pointer"
+                              >
+                                Vincular Mi Perfil
+                              </button>
+                              <button
+                                onClick={handleLoadDemoProfile}
+                                className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition cursor-pointer border border-slate-700"
+                              >
+                                Ver Partidas Demo (LA VIEJA)
+                              </button>
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-                          {m.map}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              m.status === "WIN"
-                                ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/40"
-                                : m.status === "TIE"
-                                ? "bg-amber-950/60 text-amber-400 border border-amber-800/40"
-                                : "bg-rose-950/60 text-rose-400 border border-rose-800/40"
-                            }`}
-                          >
-                            {m.score} ({m.status})
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-mono text-slate-300">{m.kda}</td>
-                        <td className="py-3 px-4 font-bold font-mono">
-                          <span
-                            className={
-                              m.rating > 5
-                                ? "text-emerald-400 font-black"
-                                : m.rating > 0
-                                ? "text-cyan-400"
-                                : "text-rose-400"
-                            }
-                          >
-                            {m.rating > 0 ? `+${Number(m.rating).toFixed(2)}` : Number(m.rating).toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-mono text-slate-300">
-                          {m.csRating ? (
-                            <span className="text-cyan-300 font-bold">{Number(m.csRating).toLocaleString()}</span>
-                          ) : (
-                            <span className="text-slate-600">--</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-slate-400">{m.highlight}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      matches.map((m: any, idx: number) => (
+                        <tr key={m.id || idx} className="hover:bg-slate-800/30 transition">
+                          <td className="py-3 px-4 text-slate-300 font-mono">
+                            <div className="flex items-center gap-1.5">
+                              {String(m.date || "").includes("Oct") && (
+                                <span className="px-1.5 py-0.5 rounded bg-cyan-950/90 border border-cyan-800/80 text-[9px] text-cyan-300 font-mono font-bold tracking-wider">
+                                  LIVE
+                                </span>
+                              )}
+                              <span>{m.date}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                            {m.map}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                m.status === "WIN"
+                                  ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/40"
+                                  : m.status === "TIE"
+                                  ? "bg-amber-950/60 text-amber-400 border border-amber-800/40"
+                                  : "bg-rose-950/60 text-rose-400 border border-rose-800/40"
+                              }`}
+                            >
+                              {m.score} ({m.status})
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-slate-300">{m.kda}</td>
+                          <td className="py-3 px-4 font-bold font-mono">
+                            <span
+                              className={
+                                m.rating > 5
+                                  ? "text-emerald-400 font-black"
+                                  : m.rating > 0
+                                  ? "text-cyan-400"
+                                  : "text-rose-400"
+                              }
+                            >
+                              {m.rating > 0 ? `+${Number(m.rating).toFixed(2)}` : Number(m.rating).toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-slate-300">
+                            {m.csRating ? (
+                              <span className="text-cyan-300 font-bold">{Number(m.csRating).toLocaleString()}</span>
+                            ) : (
+                              <span className="text-slate-600">--</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-slate-400">{m.highlight}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
