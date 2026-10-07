@@ -482,72 +482,87 @@ export default function FragOSDashboard() {
     <div className="min-h-screen bg-[#0b0e14] text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
       {/* Top Navbar */}
       <header className="border-b border-slate-800 bg-[#0d121c]/80 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-              <Crosshair className="w-6 h-6 text-white" />
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+              <Crosshair className="w-5 h-5 text-white" />
             </div>
-            <div className="flex items-center gap-2.5 shrink-0">
-              <span className="font-extrabold tracking-wider text-xl bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap leading-none">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-extrabold tracking-wider text-lg bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap leading-none">
                 FragOS
               </span>
-              <span className="inline-flex items-center text-[10px] uppercase tracking-wider text-cyan-400 font-mono px-2 py-1 rounded-md bg-cyan-950/80 border border-cyan-800/60 whitespace-nowrap shrink-0 leading-none">
-                CS2 Academy & Analytics
+              <span className="hidden xl:inline-flex items-center text-[10px] uppercase tracking-wider text-cyan-400 font-mono px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-800/60 whitespace-nowrap shrink-0 leading-none">
+                CS2 Academy
               </span>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 overflow-x-auto">
+          <nav className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800/80 overflow-x-auto no-scrollbar scroll-smooth">
             <button
               onClick={() => setActiveTab("diagnostico")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 cursor-pointer ${
                 activeTab === "diagnostico"
-                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20 font-bold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              Diagnóstico & Stats
+              <Activity className="w-3.5 h-3.5 shrink-0" />
+              <span>Diagnóstico</span>
             </button>
             <button
               onClick={() => setActiveTab("historial")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 cursor-pointer ${
                 activeTab === "historial"
-                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20 font-bold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              Historial Premier ({matches.length})
+              <History className="w-3.5 h-3.5 shrink-0" />
+              <span>Historial</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeTab === "historial"
+                    ? "bg-black/25 text-black font-bold"
+                    : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {matches.length}
+              </span>
             </button>
             <button
               onClick={() => setActiveTab("rutina")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 cursor-pointer ${
                 activeTab === "rutina"
-                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20 font-bold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              Rutina Adaptativa ({duration}m)
+              <Zap className="w-3.5 h-3.5 shrink-0" />
+              <span>Rutina</span>
+              <span className="text-[10px] opacity-75 font-mono">({duration}m)</span>
             </button>
             <button
               onClick={() => setActiveTab("lineups")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 cursor-pointer ${
                 activeTab === "lineups"
-                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20 font-bold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              Lineups & Tácticas
+              <Target className="w-3.5 h-3.5 shrink-0" />
+              <span>Lineups</span>
             </button>
             <button
               onClick={() => setActiveTab("comunidad")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 cursor-pointer ${
                 activeTab === "comunidad"
-                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                  ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20 font-bold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              Escuela CS (Discord)
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span>Escuela CS</span>
             </button>
           </nav>
 
@@ -558,35 +573,36 @@ export default function FragOSDashboard() {
                 setModalTab("vincular");
                 setIsConnectModalOpen(true);
               }}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold px-3.5 py-2 rounded-xl transition text-xs shadow-lg shadow-cyan-500/25 shrink-0 cursor-pointer"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold px-3 py-1.5 rounded-xl transition text-xs shadow-lg shadow-cyan-500/25 shrink-0 cursor-pointer"
             >
-              <Link2 className="w-4 h-4" />
-              <span>Conectar Perfil</span>
+              <Link2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Conectar Perfil</span>
+              <span className="sm:hidden">Conectar</span>
             </button>
           ) : (
             <button
               onClick={() => setIsConnectModalOpen(true)}
-              className="flex items-center gap-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-3 py-1.5 rounded-xl transition text-left group cursor-pointer shrink-0"
+              className="flex items-center gap-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 px-2.5 py-1.5 rounded-xl transition text-left group cursor-pointer shrink-0"
               title="Haz clic para conectar cuenta o cambiar perfil"
             >
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition shrink-0">
+              <div className="w-7 h-7 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-cyan-400 transition shrink-0">
                 <img src={stats.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="hidden sm:block">
                 <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
-                  {stats.username}
+                  <span className="max-w-[85px] truncate">{stats.username}</span>
                   <span
-                    className={`text-[10px] px-1 py-0.2 rounded border ${
+                    className={`text-[9px] px-1 py-0.2 rounded border font-mono ${
                       stats.isDemo
                         ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                         : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                     }`}
                   >
-                    {stats.isDemo ? "Demo" : `${stats.winRate} WR`}
+                    {stats.isDemo ? "Demo" : stats.winRate}
                   </span>
                 </div>
                 <div className="text-[10px] text-cyan-400 font-mono font-medium flex items-center gap-1">
-                  {stats.premierRating > 0 ? `${stats.premierRating.toLocaleString()} CS Rating` : "Conectado"} • Sincronizar{" "}
+                  {stats.premierRating > 0 ? `${stats.premierRating.toLocaleString()} CS` : "Conectado"} • Sync{" "}
                   <RefreshCw className="w-2.5 h-2.5 group-hover:rotate-180 transition-transform duration-500" />
                 </div>
               </div>
@@ -1437,7 +1453,7 @@ export default function FragOSDashboard() {
               </div>
 
               {/* Map Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
                 {["Todos", "Mirage", "Dust 2", "Inferno", "Anubis", "Nuke", "Ancient", "Vertigo"].map((m) => (
                   <button
                     key={m}
