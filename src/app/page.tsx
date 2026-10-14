@@ -310,28 +310,68 @@ export default function FragOSDashboard() {
   const [customWinrate, setCustomWinrate] = useState(stats.winRate);
   const [customOpening, setCustomOpening] = useState(stats.openingDuelWinrate);
 
+  // Validadores defensivos de esquema para datos provenientes de localStorage
+  const isValidProfile = (data: any): boolean => {
+    return (
+      Boolean(data) &&
+      typeof data === "object" &&
+      typeof data.username === "string" &&
+      typeof data.steamId === "string" &&
+      typeof data.avatarUrl === "string" &&
+      (data.avatarUrl.startsWith("https://") || data.avatarUrl.startsWith("/"))
+    );
+  };
+
+  const isValidMatchList = (data: any): boolean => {
+    return (
+      Array.isArray(data) &&
+      data.every(
+        (m) =>
+          Boolean(m) &&
+          typeof m === "object" &&
+          typeof m.id === "string" &&
+          typeof m.map === "string" &&
+          typeof m.score === "string"
+      )
+    );
+  };
+
   // Cargar perfil y partidas de localStorage al montar si existen
   useEffect(() => {
     try {
       const savedProfile = localStorage.getItem("fragos_user_profile");
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
-        setStats(parsed);
-        setCustomRating(parsed.premierRating || 0);
-        setCustomKD(parsed.kdRatio || 0);
-        setCustomADR(parsed.adr || 0);
-        setCustomWinrate(parsed.winRate || "0%");
-        setCustomOpening(parsed.openingDuelWinrate || 0);
+        if (isValidProfile(parsed)) {
+          setStats(parsed);
+          setCustomRating(parsed.premierRating || 0);
+          setCustomKD(parsed.kdRatio || 0);
+          setCustomADR(parsed.adr || 0);
+          setCustomWinrate(parsed.winRate || "0%");
+          setCustomOpening(parsed.openingDuelWinrate || 0);
+        } else {
+          localStorage.removeItem("fragos_user_profile");
+          setIsConnectModalOpen(true);
+        }
       } else {
         // Primera vez que entra el usuario a la web: ¡Pedir su perfil inmediatamente!
         setIsConnectModalOpen(true);
       }
       const savedMatches = localStorage.getItem("fragos_user_matches");
       if (savedMatches) {
-        setMatches(JSON.parse(savedMatches));
+        const parsedMatches = JSON.parse(savedMatches);
+        if (isValidMatchList(parsedMatches)) {
+          setMatches(parsedMatches);
+        } else {
+          localStorage.removeItem("fragos_user_matches");
+        }
       }
     } catch (e) {
-      // ignore
+      // Si el JSON estaba corrupto, limpiar claves
+      try {
+        localStorage.removeItem("fragos_user_profile");
+        localStorage.removeItem("fragos_user_matches");
+      } catch (_) {}
     }
   }, []);
 
